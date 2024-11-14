@@ -24,7 +24,13 @@ data "aws_security_group" "inbound" {
   }
 }
 
-
+data "aws_security_group" "cluster" {
+  id = var.cluster_sg
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.vpc.id]
+  }
+}
 # IAM
 data "aws_iam_policy_document" "ecs_trust_policy" {
   statement {

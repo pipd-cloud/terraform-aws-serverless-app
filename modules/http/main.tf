@@ -321,7 +321,7 @@ resource "aws_ecs_service" "http" {
   # Network configuration
   network_configuration {
     assign_public_ip = false
-    security_groups  = [aws_security_group.http_sg.id]
+    security_groups  = [aws_security_group.http_sg.id, data.aws_security_group.cluster.id]
     subnets          = keys(data.aws_subnet.vpc_subnets)
   }
 

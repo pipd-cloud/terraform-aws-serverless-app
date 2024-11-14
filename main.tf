@@ -14,13 +14,13 @@ module "http" {
   aws_tags            = var.aws_tags
   acm_domain          = var.http_acm_domain
   cluster_name        = module.ecs_cluster.cluster.name
+  cluster_sg          = module.ecs_cluster.cluster_sg.id
   container           = var.http_container
   scale_policy        = var.http_scale_policy
   task_execution_role = module.ecs_cluster.task_execution_role.name
   managed_policies    = var.http_managed_policies
   policy              = var.http_policy
   sns_topic           = var.sns_topic
-  security_groups     = [module.ecs_cluster.cluster_sg.id]
   vpc_id              = var.vpc_id
   vpc_subnet_ids      = var.http_vpc_subnet_ids
 }

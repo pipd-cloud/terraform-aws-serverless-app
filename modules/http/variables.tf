@@ -23,6 +23,11 @@ variable "vpc_subnet_ids" {
   type        = list(string)
 }
 
+variable "cluster_sg" {
+  description = "The ID of the ECS cluster security group."
+  type        = string
+}
+
 variable "security_groups" {
   description = "The IDs of the security groups that may access these resources."
   type        = list(string)
