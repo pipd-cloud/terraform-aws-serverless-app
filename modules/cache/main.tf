@@ -9,15 +9,15 @@ resource "aws_security_group" "redis" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "redis_inbound" {
-  for_each                     = data.aws_security_group.inbound
-  description                  = "Allows traffic from ${each.value.name}."
+  count                        = length(data.aws_security_group.inbound)
+  description                  = "Allows traffic from ${data.aws_security_group.inbound[count.index].name}."
   security_group_id            = aws_security_group.redis.id
   ip_protocol                  = "tcp"
   from_port                    = 6379
   to_port                      = 6379
-  referenced_security_group_id = each.value.id
+  referenced_security_group_id = data.aws_security_group.inbound[count.index].id
   tags = merge({
-    Name = "${var.id}-redis-cache-sg-inbound-${each.key}"
+    Name = "${var.id}-redis-cache-sg-inbound-${data.aws_security_group.inbound[count.index].name}"
     TFID = var.id
   }, var.aws_tags)
 }

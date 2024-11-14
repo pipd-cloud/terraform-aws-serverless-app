@@ -16,8 +16,8 @@ data "aws_subnet" "vpc_subnets" {
 }
 
 data "aws_security_group" "inbound" {
-  for_each = toset(var.security_groups)
-  id       = each.value
+  count = length(var.security_groups)
+  id    = each.value
   filter {
     name   = "vpc-id"
     values = [data.aws_vpc.vpc.id]

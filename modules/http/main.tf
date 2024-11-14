@@ -78,13 +78,13 @@ resource "aws_vpc_security_group_ingress_rule" "http_sg" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "http_sg_inbound" {
-  for_each                     = data.aws_security_group.inbound
-  description                  = "Allow all traffic from specified security groups."
+  count                        = length(data.aws_security_group.inbound)
+  description                  = "Allow all traffic from ${data.aws_security_group.inbound[count.index].name}."
   security_group_id            = aws_security_group.http_sg.id
   ip_protocol                  = -1
-  referenced_security_group_id = each.value.id
+  referenced_security_group_id = data.aws_security_group.inbound[count.index].id
   tags = merge({
-    Name = "${var.id}-${var.container.name}-svc-sg-inbound-${each.key}",
+    Name = "${var.id}-${var.container.name}-svc-sg-inbound-${data.aws_security_group.inbound[count.index].name}",
     TFID = var.id
   }, var.aws_tags)
 }

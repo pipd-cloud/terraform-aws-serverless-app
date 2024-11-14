@@ -20,13 +20,13 @@ resource "aws_vpc_security_group_ingress_rule" "cluster_sg_inbound_self" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "cluster_sg_inbound" {
-  for_each                     = data.aws_security_group.inbound
-  description                  = "Allows traffic from ${each.value.name}."
+  count                        = length(data.aws_security_group.inbound)
+  description                  = "Allows traffic from ${data.aws_security_group.inbound[count.index].name}."
   security_group_id            = aws_security_group.cluster_sg.id
   ip_protocol                  = -1
-  referenced_security_group_id = each.value.id
+  referenced_security_group_id = data.aws_security_group.inbound[count.index].id
   tags = merge({
-    Name = "${var.id}-ecs-cluster-sg-inbound-${each.key}"
+    Name = "${var.id}-ecs-cluster-sg-inbound-${data.aws_security_group.inbound[count.index].id}"
     TFID = var.id
   }, var.aws_tags)
 }
