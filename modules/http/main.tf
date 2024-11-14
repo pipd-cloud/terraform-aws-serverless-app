@@ -320,9 +320,9 @@ resource "aws_ecs_service" "http" {
 
   # Network configuration
   network_configuration {
-    assign_public_ip = true
-    security_groups  = [aws_security_group.http_sg.id, data.aws_security_group.inbound[*].id]
-    subnets          = data.aws_subnet.vpc_subnets[*].id
+    assign_public_ip = false
+    security_groups  = [aws_security_group.http_sg.id]
+    subnets          = keys(data.aws_subnet.vpc_subnets)
   }
 
   load_balancer {

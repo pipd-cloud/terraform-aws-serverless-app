@@ -14,15 +14,15 @@ resource "aws_security_group" "cluster" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "cluster_sg_inbound" {
-  for_each                     = { for sg in data.aws_security_group.inbound : sg.id => sg if !var.proxy }
+  count                        = !var.proxy ? length(data.aws_security_group.inbound) : 0
   security_group_id            = aws_security_group.cluster.id
-  description                  = "Allows traffic from ${each.value.name}"
+  description                  = "Allows traffic from ${data.aws_security_group.inbound[count.index].name}"
   ip_protocol                  = "tcp"
   from_port                    = 5432
   to_port                      = 5432
-  referenced_security_group_id = each.value.id
+  referenced_security_group_id = data.aws_security_group.inbound[count.index].id
   tags = merge({
-    Name = "${var.id}-rds-cluster-sg-inbound"
+    Name = "${var.id}-rds-cluster-sg-inbound-${data.aws_security_group.inbound[count.index].name}"
     TFID = var.id
   }, var.aws_tags)
 }
@@ -77,15 +77,15 @@ resource "aws_security_group" "proxy" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "proxy_sg_inbound" {
-  for_each                     = { for sg in data.aws_security_group.inbound : sg.id => sg if var.proxy }
+  count                        = var.proxy ? length(data.aws_security_group.inbound) : 0
   security_group_id            = aws_security_group.proxy[0].id
-  description                  = "Allows traffic from ${each.value.name}."
+  description                  = "Allows traffic from ${data.aws_security_group.inbound[count.index].name}."
   ip_protocol                  = "tcp"
   from_port                    = 5432
   to_port                      = 5432
-  referenced_security_group_id = each.value.id
+  referenced_security_group_id = data.aws_security_group.inbound[count.index].id
   tags = merge({
-    Name = "${var.id}-rds-proxy-sg-inbound-${each.key}"
+    Name = "${var.id}-rds-proxy-sg-inbound-${data.aws_security_group.inbound[count.index].name}"
     TFID = var.id
   }, var.aws_tags)
 }
