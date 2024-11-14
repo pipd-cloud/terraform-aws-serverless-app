@@ -126,6 +126,12 @@ resource "aws_iam_role_policy_attachment" "task" {
   policy_arn = aws_iam_policy.task_policy.arn
 }
 
+resource "aws_iam_role_policy_attachment" "managed_policies" {
+  for_each   = data.aws_iam_policy.task_managed_policies
+  role       = aws_iam_role.task_role.name
+  policy_arn = each.value.arn
+}
+
 # Elastic Load Balancing
 ## Load Balancer
 resource "aws_lb" "alb" {
@@ -316,8 +322,8 @@ resource "aws_ecs_service" "http" {
   # Network configuration
   network_configuration {
     assign_public_ip = true
-    security_groups  = [aws_security_group.http_sg.id, data.aws_security_group.ecs_cluster_sg.id]
-    subnets          = [for subnet in var.vpc_subnet_ids : subnet]
+    security_groups  = [aws_security_group.http_sg.id, data.aws_security_group.inbound.id]
+    subnets          = data.aws_subnet.vpc_subnets[*].id
   }
 
   load_balancer {

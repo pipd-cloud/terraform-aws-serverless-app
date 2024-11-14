@@ -8,7 +8,7 @@ module "ecs_cluster" {
 }
 
 module "http" {
-  depends_on          = [module.ecs_cluster.ecs_cluster]
+  depends_on          = [module.ecs_cluster.cluster]
   source              = "./modules/http"
   id                  = var.id
   aws_tags            = var.aws_tags
@@ -26,7 +26,7 @@ module "http" {
 }
 
 module "database" {
-  depends_on      = [module.ecs_cluster.ecs_cluster]
+  depends_on      = [module.ecs_cluster.cluster]
   source          = "./modules/database"
   id              = var.id
   aws_tags        = var.aws_tags
@@ -41,7 +41,7 @@ module "database" {
 }
 
 module "cache" {
-  depends_on      = [module.ecs_cluster.ecs_cluster]
+  depends_on      = [module.ecs_cluster.cluster]
   source          = "./modules/cache"
   id              = var.id
   aws_tags        = var.aws_tags
