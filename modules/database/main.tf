@@ -16,6 +16,7 @@ resource "aws_security_group" "cluster" {
 resource "aws_vpc_security_group_ingress_rule" "cluster_sg_inbound" {
   for_each                     = { for k, v in data.aws_security_group.inbound : k => v if !var.proxy }
   security_group_id            = aws_security_group.cluster.id
+  description                  = "Allows traffic from ${each.value.name}"
   ip_protocol                  = "tcp"
   from_port                    = 5432
   to_port                      = 5432
@@ -78,6 +79,7 @@ resource "aws_security_group" "proxy" {
 resource "aws_vpc_security_group_ingress_rule" "proxy_sg_inbound" {
   for_each                     = { for k, v in data.aws_security_group.inbound : k => v if var.proxy }
   security_group_id            = aws_security_group.proxy[0].id
+  description                  = "Allows traffic from ${each.value.name}."
   ip_protocol                  = "tcp"
   from_port                    = 5432
   to_port                      = 5432

@@ -10,7 +10,7 @@ resource "aws_security_group" "redis" {
 
 resource "aws_vpc_security_group_ingress_rule" "redis_inbound" {
   for_each                     = data.aws_security_group.inbound
-  description                  = "Allows traffic from ${each.key}."
+  description                  = "Allows traffic from ${each.value.name}."
   security_group_id            = aws_security_group.redis.id
   ip_protocol                  = "tcp"
   from_port                    = 6379

@@ -105,15 +105,14 @@ data "aws_iam_policy_document" "cmk_fargate_policy" {
   }
 }
 
-
 # VPC
 data "aws_vpc" "vpc" {
   id = var.vpc_id
 }
 
 data "aws_security_group" "inbound" {
-  for_each = toset(var.security_groups)
-  id       = each.value
+  count = length(var.security_groups)
+  id    = var.security_groups[count.index]
   filter {
     name   = "vpc-id"
     values = [data.aws_vpc.vpc.id]

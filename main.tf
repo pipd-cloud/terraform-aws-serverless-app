@@ -34,6 +34,7 @@ module "database" {
   engine_version  = var.db_engine_version
   source_snapshot = var.db_source_snapshot
   instance_count  = var.db_instance_count
+  proxy           = var.db_proxy
   security_groups = concat([module.ecs_cluster.cluster_sg.id], var.db_inbound_sg_ids)
   sns_topic       = var.sns_topic
   vpc_id          = var.vpc_id

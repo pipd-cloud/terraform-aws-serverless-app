@@ -21,6 +21,7 @@ resource "aws_vpc_security_group_ingress_rule" "cluster_sg_inbound_self" {
 
 resource "aws_vpc_security_group_ingress_rule" "cluster_sg_inbound" {
   for_each                     = data.aws_security_group.inbound
+  description                  = "Allows traffic from ${each.value.name}."
   security_group_id            = aws_security_group.cluster_sg.id
   ip_protocol                  = -1
   referenced_security_group_id = each.value.id

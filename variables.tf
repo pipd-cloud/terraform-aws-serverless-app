@@ -152,6 +152,12 @@ variable "db_acu_config" {
   }
 }
 
+variable "db_proxy" {
+  description = "Whether to create an RDS proxy."
+  type        = bool
+  default     = false
+}
+
 # Cache
 variable "cache_inbound_sg_ids" {
   description = "The list of security groups that may access the cache."
