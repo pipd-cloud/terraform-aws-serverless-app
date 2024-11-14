@@ -13,7 +13,7 @@ module "http" {
   id                  = var.id
   aws_tags            = var.aws_tags
   acm_domain          = var.http_acm_domain
-  cluster_name        = module.ecs_cluster.ecs_cluster.name
+  cluster_name        = module.ecs_cluster.cluster.name
   container           = var.http_container
   scale_policy        = var.http_scale_policy
   task_execution_role = module.ecs_cluster.task_execution_role.name
