@@ -1,6 +1,4 @@
 # Current Account
-data "aws_caller_identity" "current" {}
-
 data "aws_region" "current" {}
 
 # VPC
@@ -98,11 +96,6 @@ data "aws_acm_certificate" "alb_certificate" {
 # ECS
 data "aws_ecs_cluster" "ecs_cluster" {
   cluster_name = var.cluster_name
-}
-
-# KMS
-data "aws_kms_alias" "ecr" {
-  name = "alias/aws/ecr"
 }
 
 

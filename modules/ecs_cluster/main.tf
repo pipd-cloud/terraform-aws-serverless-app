@@ -96,7 +96,16 @@ resource "aws_iam_role_policy_attachment" "task_exeuctor_policy" {
   policy_arn = aws_iam_policy.task_execution_policy.arn
 }
 
-# ECS Cluster
+# Secrets
+resource "aws_secretsmanager_secret" "cluster_secrets" {
+  name = "${var.id}-ecs-cluster-secrets"
+  tags = merge({
+    Name = "${var.id}-ecs-cluster-secrets"
+    TFID = var.id
+  }, var.aws_tags)
+}
+
+# ECS
 resource "aws_ecs_cluster" "ecs_cluster" {
   depends_on = [aws_kms_key.cmk_fargate]
   name       = "${var.id}-ecs-cluster"

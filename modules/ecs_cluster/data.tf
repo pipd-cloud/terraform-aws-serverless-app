@@ -41,8 +41,8 @@ data "aws_iam_policy_document" "task_execution_policy" {
       "kms:GenerateDataKey"
     ]
     resources = [
-      data.aws_kms_alias.ecr.target_key_arn,
-      data.aws_kms_alias.secretsmanager.target_key_arn,
+      "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/aws/secretsmanager",
+      "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/aws/ecr",
       aws_kms_key.cmk_fargate.arn
     ]
   }
@@ -105,14 +105,6 @@ data "aws_iam_policy_document" "cmk_fargate_policy" {
   }
 }
 
-# AWS Managed Keys
-data "aws_kms_alias" "ecr" {
-  name = "alias/aws/ecr"
-}
-
-data "aws_kms_alias" "secretsmanager" {
-  name = "alias/aws/secretsmanager"
-}
 
 # VPC
 data "aws_vpc" "vpc" {

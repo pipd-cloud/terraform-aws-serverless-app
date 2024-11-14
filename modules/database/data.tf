@@ -56,7 +56,7 @@ data "aws_iam_policy_document" "proxy_policy" {
     effect  = "Allow"
     actions = ["kms:Decrypt"]
     resources = [
-      data.aws_kms_alias.secretsmanager.target_key_arn,
+      "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/aws/secretsmanager"
     ]
     condition {
       test     = "StringEquals"
@@ -66,10 +66,4 @@ data "aws_iam_policy_document" "proxy_policy" {
       ]
     }
   }
-}
-
-
-# KMS
-data "aws_kms_alias" "secretsmanager" {
-  name = "alias/aws/secretsmanager"
 }

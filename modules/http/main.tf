@@ -216,7 +216,6 @@ resource "aws_ecr_repository" "http_repo" {
   }, var.aws_tags)
   encryption_configuration {
     encryption_type = "KMS"
-    kms_key         = data.aws_kms_alias.ecr.target_key_arn
   }
 }
 

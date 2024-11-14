@@ -26,7 +26,7 @@ module "http" {
 }
 
 module "database" {
-  depends_on      = [module.ecs_cluster.cluster]
+  depends_on      = [module.ecs_cluster.cluster, module.http.secrets]
   source          = "./modules/database"
   id              = var.id
   aws_tags        = var.aws_tags
