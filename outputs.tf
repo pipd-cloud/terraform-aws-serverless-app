@@ -1,3 +1,3 @@
 output "alb" {
-  value = { for k, v in var.ecs_services : k => module.ecs_svc.alb }
+  value = { for k, v in module.ecs_svc : k => v.alb }
 }
