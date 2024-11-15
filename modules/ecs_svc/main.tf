@@ -1,104 +1,98 @@
 # VPC Security Groups
 ## Load Balancer
 resource "aws_security_group" "alb_sg" {
-  description = "The security group associated with the ALB."
-  name        = "${var.id}-${var.container.name}-alb-sg"
+  count       = var.alb ? 1 : 0
+  description = "The application load balancer (${var.container.name}) security group."
+  name        = "${var.id}-${var.container.name}-ecs-svc-alb-sg"
   vpc_id      = var.vpc_id
   tags = merge({
-    Name = "${var.id}-${var.container.name}-alb-sg",
+    Name = "${var.id}-${var.container.name}-ecs-svc-alb-sg",
     TFID = var.id
   }, var.aws_tags)
 }
 
 resource "aws_vpc_security_group_ingress_rule" "alb_sg_https" {
-  security_group_id = aws_security_group.alb_sg.id
+  count             = var.alb ? 1 : 0
+  security_group_id = aws_security_group.alb_sg[0].id
   description       = "Allow all HTTPS traffic."
   from_port         = 443
   to_port           = 443
   ip_protocol       = "tcp"
   cidr_ipv4         = "0.0.0.0/0"
   tags = merge({
-    Name = "${var.id}-${var.container.name}-alb-sg-https",
+    Name = "${var.id}-${var.container.name}-ecs-svc-alb-sg-https",
     TFID = var.id
   }, var.aws_tags)
 }
 
 resource "aws_vpc_security_group_ingress_rule" "alb_sg_http" {
-  security_group_id = aws_security_group.alb_sg.id
+  count             = var.alb ? 1 : 0
+  security_group_id = aws_security_group.alb_sg[0].id
   description       = "Allow all HTTP traffic."
   from_port         = 80
   to_port           = 80
   ip_protocol       = "tcp"
   cidr_ipv4         = "0.0.0.0/0"
   tags = merge({
-    Name = "${var.id}-${var.container.name}-alb-sg-http",
+    Name = "${var.id}-${var.container.name}-ecs-svc-alb-sg-http",
     TFID = var.id
   }, var.aws_tags)
 }
 
 resource "aws_vpc_security_group_egress_rule" "alb_sg_all" {
-  security_group_id = aws_security_group.alb_sg.id
+  count             = var.alb ? 1 : 0
+  security_group_id = aws_security_group.alb_sg[0].id
   description       = "Allow all outbound traffic."
   ip_protocol       = -1
   cidr_ipv4         = "0.0.0.0/0"
   tags = merge({
-    Name = "${var.id}-${var.container.name}-alb-sg-all",
+    Name = "${var.id}-${var.container.name}-ecs-svc-alb-sg-all",
     TFID = var.id
   }, var.aws_tags)
 }
 ## Secrets
-resource "aws_secretsmanager_secret" "http_secrets" {
-  name = "${var.id}-${var.container.name}-svc-secrets"
+resource "aws_secretsmanager_secret" "ecs_svc_secrets" {
+  name        = "${var.id}-${var.container.name}-ecs-svc-secrets"
+  description = "Secrets used by the ${var.container.name} container."
   tags = merge({
-    Name = "${var.id}-${var.container.name}-svc-secrets",
+    Name = "${var.id}-${var.container.name}-ecs-svc-secrets",
     TFID = var.id
   }, var.aws_tags)
 }
 ## Service
-resource "aws_security_group" "http_sg" {
-  name   = "${var.id}-${var.container.name}-svc-sg"
+resource "aws_security_group" "ecs_svc_sg" {
+  name   = "${var.id}-${var.container.name}-ecs-svc-sg"
   vpc_id = var.vpc_id
   tags = merge({
-    Name = "${var.id}-${var.container.name}-svc-sg",
+    Name = "${var.id}-${var.container.name}-ecs-svc-sg",
     TFID = var.id
   }, var.aws_tags)
 }
 
-resource "aws_vpc_security_group_ingress_rule" "http_sg" {
-  security_group_id            = aws_security_group.http_sg.id
+resource "aws_vpc_security_group_ingress_rule" "ecs_svc_sg" {
+  security_group_id            = aws_security_group.ecs_svc_sg.id
   description                  = "Allow traffic on port ${var.container.port} from the load balancer."
   from_port                    = var.container.port
   to_port                      = var.container.port
   ip_protocol                  = "tcp"
-  referenced_security_group_id = aws_security_group.alb_sg.id
+  referenced_security_group_id = aws_security_group.alb_sg[0].id
   tags = merge({
-    Name = "${var.id}-${var.container.name}-svc-sg-https",
+    Name = "${var.id}-${var.container.name}-ecs-svc-sg-https",
     TFID = var.id
   }, var.aws_tags)
 }
 
-resource "aws_vpc_security_group_ingress_rule" "http_sg_inbound" {
-  count                        = length(data.aws_security_group.inbound)
-  description                  = "Allow all traffic from ${data.aws_security_group.inbound[count.index].name}."
-  security_group_id            = aws_security_group.http_sg.id
-  ip_protocol                  = -1
-  referenced_security_group_id = data.aws_security_group.inbound[count.index].id
-  tags = merge({
-    Name = "${var.id}-${var.container.name}-svc-sg-inbound-${data.aws_security_group.inbound[count.index].name}",
-    TFID = var.id
-  }, var.aws_tags)
-}
-
-resource "aws_vpc_security_group_egress_rule" "http_all" {
+resource "aws_vpc_security_group_egress_rule" "ecs_svc_all" {
   description       = "Allow all outbound traffic."
-  security_group_id = aws_security_group.http_sg.id
+  security_group_id = aws_security_group.ecs_svc_sg.id
   ip_protocol       = -1
   cidr_ipv4         = "0.0.0.0/0"
   tags = merge({
-    Name = "${var.id}-${var.container.name}-svc-sg-all",
+    Name = "${var.id}-${var.container.name}-ecs-svc-sg-all",
     TFID = var.id
   }, var.aws_tags)
 }
+
 # IAM
 ## Container
 resource "aws_iam_role" "task_role" {
@@ -138,7 +132,7 @@ resource "aws_lb" "alb" {
   name               = "${var.id}-${var.container.name}-alb"
   internal           = false
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.alb_sg.id]
+  security_groups    = [aws_security_group.alb_sg[0].id]
   subnets            = keys(data.aws_subnet.vpc_public_subnets)
   tags = merge({
     Name = "${var.id}-${var.container.name}-alb",
@@ -147,7 +141,7 @@ resource "aws_lb" "alb" {
 }
 
 ## Target Group
-resource "aws_lb_target_group" "http_tg" {
+resource "aws_lb_target_group" "ecs_svc_tg" {
   name                 = "${var.id}-${var.container.name}-tg"
   deregistration_delay = 300
   port                 = 80
@@ -171,19 +165,19 @@ resource "aws_lb_target_group" "http_tg" {
 ## Listeners
 resource "aws_lb_listener" "https" {
   lifecycle {
-    replace_triggered_by = [aws_lb_target_group.http_tg]
+    replace_triggered_by = [aws_lb_target_group.ecs_svc_tg]
   }
   load_balancer_arn = aws_lb.alb.arn
   certificate_arn   = data.aws_acm_certificate.alb_certificate.arn
   port              = 443
   protocol          = "HTTPS"
   tags = merge({
-    Name = "${var.id}-${var.container.name}-alb-https",
+    Name = "${var.id}-${var.container.name}-ecs-svc-alb-https",
     TFID = var.id
   }, var.aws_tags)
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.http_tg.arn
+    target_group_arn = aws_lb_target_group.ecs_svc_tg.arn
   }
 }
 
@@ -192,7 +186,7 @@ resource "aws_lb_listener" "http" {
   port              = 80
   protocol          = "HTTP"
   tags = merge({
-    Name = "${var.id}-${var.container.name}-alb-http",
+    Name = "${var.id}-${var.container.name}-ecs-svc-alb-http",
     TFID = var.id
   }, var.aws_tags)
   default_action {
@@ -206,7 +200,7 @@ resource "aws_lb_listener" "http" {
 }
 
 # ECR
-resource "aws_ecr_repository" "http_repo" {
+resource "aws_ecr_repository" "ecs_svc_repo" {
   name                 = "${var.id}-${var.container.name}"
   image_tag_mutability = "MUTABLE"
   force_delete         = true
@@ -219,14 +213,14 @@ resource "aws_ecr_repository" "http_repo" {
   }
 }
 
-resource "aws_ecr_lifecycle_policy" "http_repo_lifecycle" {
-  repository = aws_ecr_repository.http_repo.name
+resource "aws_ecr_lifecycle_policy" "ecs_svc_repo_lifecycle" {
+  repository = aws_ecr_repository.ecs_svc_repo.name
   policy     = data.aws_ecr_lifecycle_policy_document.ecr.json
 }
 
 # ECS
 ## Task definition
-resource "aws_ecs_task_definition" "http" {
+resource "aws_ecs_task_definition" "ecs_svc" {
   family             = "${var.id}-${var.container.name}-task-definition"
   task_role_arn      = aws_iam_role.task_role.arn
   execution_role_arn = data.aws_iam_role.task_execution_role.arn
@@ -241,7 +235,7 @@ resource "aws_ecs_task_definition" "http" {
     merge(
       {
         name  = var.container.name
-        image = "${aws_ecr_repository.http_repo.repository_url}:${var.container.tag}"
+        image = "${aws_ecr_repository.ecs_svc_repo.repository_url}:${var.container.tag}"
         portMappings = [{
           containerPort = var.container.port
           hostPost      = var.container.port
@@ -255,7 +249,7 @@ resource "aws_ecs_task_definition" "http" {
           for key in var.container.secret_keys :
           {
             name      = key,
-            valueFrom = "${aws_secretsmanager_secret.http_secrets.arn}:${key}::"
+            valueFrom = "${aws_secretsmanager_secret.ecs_svc_secrets.arn}:${key}::"
           }
         ]
         logConfiguration = {
@@ -289,11 +283,11 @@ resource "aws_ecs_task_definition" "http" {
 }
 
 ## Service
-resource "aws_ecs_service" "http" {
+resource "aws_ecs_service" "ecs_svc" {
   depends_on             = [aws_iam_role.task_role]
   name                   = "${var.id}-${var.container.name}-svc"
   cluster                = data.aws_ecs_cluster.ecs_cluster.arn
-  task_definition        = aws_ecs_task_definition.http.arn
+  task_definition        = aws_ecs_task_definition.ecs_svc.arn
   desired_count          = var.scale_policy.min_capacity
   enable_execute_command = true
 
@@ -321,12 +315,12 @@ resource "aws_ecs_service" "http" {
   # Network configuration
   network_configuration {
     assign_public_ip = false
-    security_groups  = [aws_security_group.http_sg.id, data.aws_security_group.cluster.id]
+    security_groups  = [aws_security_group.ecs_svc_sg.id, data.aws_security_group.cluster.id]
     subnets          = keys(data.aws_subnet.vpc_private_subnets)
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.http_tg.arn
+    target_group_arn = aws_lb_target_group.ecs_svc_tg.arn
     container_name   = var.container.name
     container_port   = var.container.port
   }
@@ -335,6 +329,7 @@ resource "aws_ecs_service" "http" {
   capacity_provider_strategy {
     capacity_provider = "FARGATE"
     weight            = 1
+    base              = 1
   }
   capacity_provider_strategy {
     capacity_provider = "FARGATE_SPOT"
@@ -343,10 +338,10 @@ resource "aws_ecs_service" "http" {
 }
 
 ## Autoscaling
-resource "aws_appautoscaling_target" "http_asg" {
+resource "aws_appautoscaling_target" "ecs_svc_asg" {
   max_capacity       = var.scale_policy.max_capacity
   min_capacity       = var.scale_policy.min_capacity
-  resource_id        = "service/${data.aws_ecs_cluster.ecs_cluster.cluster_name}/${aws_ecs_service.http.name}"
+  resource_id        = "service/${data.aws_ecs_cluster.ecs_cluster.cluster_name}/${aws_ecs_service.ecs_svc.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
   tags = merge({
@@ -355,12 +350,12 @@ resource "aws_appautoscaling_target" "http_asg" {
   }, var.aws_tags)
 }
 
-resource "aws_appautoscaling_policy" "http_asg_policy" {
+resource "aws_appautoscaling_policy" "ecs_svc_asg_policy" {
   name               = "${var.id}-${var.container.name}-cpu-asg-policy"
   policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.http_asg.resource_id
-  scalable_dimension = aws_appautoscaling_target.http_asg.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.http_asg.service_namespace
+  resource_id        = aws_appautoscaling_target.ecs_svc_asg.resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs_svc_asg.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.ecs_svc_asg.service_namespace
   target_tracking_scaling_policy_configuration {
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageCPUUtilization"

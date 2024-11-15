@@ -7,19 +7,21 @@ module "ecs_cluster" {
   vpc_id          = var.vpc_id
 }
 
-module "http" {
+module "ecs_svc" {
+  for_each            = var.ecs_services
   depends_on          = [module.ecs_cluster.cluster]
-  source              = "./modules/http"
+  source              = "./modules/ecs_svc"
   id                  = var.id
   aws_tags            = var.aws_tags
-  acm_domain          = var.http_acm_domain
+  alb                 = each.value.alb != null
+  acm_domain          = each.value.alb != null ? each.value.alb.domain : null
   cluster_name        = module.ecs_cluster.cluster.name
   cluster_sg          = module.ecs_cluster.cluster_sg.id
-  container           = var.http_container
-  scale_policy        = var.http_scale_policy
+  container           = each.value.container
+  scale_policy        = each.value.scale_policy
   task_execution_role = module.ecs_cluster.task_execution_role.name
-  managed_policies    = var.http_managed_policies
-  policy              = var.http_policy
+  managed_policies    = each.value.iam_managed_policies
+  policy              = each.value.iam_custom_policy
   sns_topic           = var.sns_topic
   vpc_id              = var.vpc_id
   vpc_public_subnets  = var.vpc_public_subnets

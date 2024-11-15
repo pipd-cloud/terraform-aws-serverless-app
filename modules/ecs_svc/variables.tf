@@ -33,20 +33,8 @@ variable "cluster_sg" {
   type        = string
 }
 
-variable "security_groups" {
-  description = "The IDs of the security groups that may access these resources."
-  type        = list(string)
-  default     = []
-}
-
 variable "sns_topic" {
   description = "The ARN of the SNS topic to which to send notifications."
-  type        = string
-}
-
-
-variable "acm_domain" {
-  description = "The domain to use for the ACM certificate."
   type        = string
 }
 
@@ -60,6 +48,25 @@ variable "task_execution_role" {
   type        = string
 }
 
+# ALB
+variable "alb" {
+  description = "Whether the application is fronted by an ALB."
+  type        = bool
+  default     = false
+}
+
+variable "acm_domain" {
+  description = "The domain to use for the ACM certificate."
+  type        = string
+  nullable    = true
+  default     = null
+  validation {
+    condition     = !var.alb || var.acm_domain != null
+    error_message = "The variable 'acm_domain' must be set when 'alb' is true."
+  }
+}
+
+# IAM
 variable "managed_policies" {
   description = "List of managed policies that are associated with running tasks."
   type        = list(string)

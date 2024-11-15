@@ -39,67 +39,52 @@ variable "ecs_cluster_inbound_sg_ids" {
   default     = []
 }
 
-## HTTP Service
-variable "http_container" {
-  description = "The container definition for the main ECS task."
-  type = object({
-    name    = string
-    tag     = string
-    port    = number
-    cpu     = optional(number, 2048)
-    memory  = optional(number, 4096)
-    command = optional(list(string), [])
-    environment = optional(list(object({
-      name  = string
-      value = string
+variable "ecs_services" {
+  description = "The list of ECS services to create."
+  type = map(object({
+    container = object({
+      name    = string
+      tag     = string
+      port    = number
+      cpu     = optional(number, 2048)
+      memory  = optional(number, 4096)
+      command = optional(list(string), [])
+      environment = optional(list(object({
+        name  = string
+        value = string
+      })), [])
+      secret_keys        = optional(list(string), [])
+      health_check_route = optional(string, "/")
+    })
+    iam_custom_policy = optional(list(object({
+      sid       = string
+      effect    = string
+      actions   = list(string)
+      resources = list(string)
+      conditions = optional(list(object({
+        test     = string
+        variable = string
+        values   = list(string)
+      })), [])
     })), [])
-    secret_keys        = optional(list(string), [])
-    health_check_route = optional(string, "/")
-  })
-}
-variable "http_policy" {
-  description = "The IAM policy to associate with the task."
-  type = list(object({
-    sid       = string
-    effect    = string
-    actions   = list(string)
-    resources = list(string)
-    conditions = optional(list(object({
-      test     = string
-      variable = string
-      values   = list(string)
-    })), [])
+    iam_managed_policies = optional(list(string), [])
+    scale_policy = optional(object({
+      min_capacity       = number
+      max_capacity       = number
+      cpu_target         = number
+      scale_in_cooldown  = number
+      scale_out_cooldown = number
+      }), {
+      min_capacity       = 1
+      max_capacity       = 8
+      cpu_target         = 70
+      scale_in_cooldown  = 60
+      scale_out_cooldown = 60
+    })
+    alb = optional(object({
+      domain = string
+    }), null)
   }))
-  default = []
-}
-
-variable "http_scale_policy" {
-  description = "The scaling policy for the ECS service."
-  type = object({
-    min_capacity       = optional(number, 1)
-    max_capacity       = optional(number, 8)
-    cpu_target         = optional(number, 70)
-    scale_in_cooldown  = optional(number, 60)
-    scale_out_cooldown = optional(number, 60)
-  })
-  default = {
-    min_capacity       = 1
-    max_capacity       = 8
-    cpu_target         = 70
-    scale_in_cooldown  = 60
-    scale_out_cooldown = 60
-  }
-}
-
-variable "http_acm_domain" {
-  description = "The domain to use for the ACM certificate."
-  type        = string
-}
-
-variable "http_managed_policies" {
-  description = "Managed policies to grant to the HTTP service."
-  type        = list(string)
-  default     = []
 }
 
 ## Database
