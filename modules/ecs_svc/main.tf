@@ -202,7 +202,7 @@ resource "aws_lb_listener" "http" {
 # ECR
 resource "aws_ecr_repository" "ecs_svc_repo" {
   name                 = "${var.id}-${var.container.name}"
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE"
   force_delete         = true
   tags = merge({
     Name = "${var.id}-${var.container.name}",
@@ -215,7 +215,25 @@ resource "aws_ecr_repository" "ecs_svc_repo" {
 
 resource "aws_ecr_lifecycle_policy" "ecs_svc_repo_lifecycle" {
   repository = aws_ecr_repository.ecs_svc_repo.name
-  policy     = data.aws_ecr_lifecycle_policy_document.ecr.json
+  policy     = data.aws_ecr_lifecycle_policy_document.ecs_svc.json
+}
+
+resource "aws_ecr_repository" "buildcache_repo" {
+  name                 = "${var.id}-${var.container.name}-buildcache"
+  image_tag_mutability = "MUTABLE"
+  force_delete         = true
+  tags = merge({
+    Name = "${var.id}-${var.container.name}-buildcache",
+    TFID = var.id
+  }, var.aws_tags)
+  encryption_configuration {
+    encryption_type = "KMS"
+  }
+}
+
+resource "aws_ecr_lifecycle_policy" "buildcache_repo_lifecycle" {
+  repository = aws_ecr_repository.buildcache_repo.name
+  policy     = data.aws_ecr_lifecycle_policy_document.buildcache.json
 }
 
 # ECS
@@ -235,7 +253,7 @@ resource "aws_ecs_task_definition" "ecs_svc" {
     merge(
       {
         name  = var.container.name
-        image = "${aws_ecr_repository.ecs_svc_repo.repository_url}:${var.container.tag}"
+        image = data.aws_ecr_image.ecs_svc.image_uri
         portMappings = [{
           containerPort = var.container.port
           hostPost      = var.container.port

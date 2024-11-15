@@ -106,9 +106,9 @@ data "aws_ecs_cluster" "ecs_cluster" {
 
 
 # ECR
-data "aws_ecr_lifecycle_policy_document" "ecr" {
+data "aws_ecr_lifecycle_policy_document" "ecs_svc" {
   rule {
-    priority    = 1
+    priority    = 10
     description = "Expire untagged images after 30 days."
     selection {
       tag_status   = "untagged"
@@ -120,15 +120,33 @@ data "aws_ecr_lifecycle_policy_document" "ecr" {
       type = "expire"
     }
   }
+
+  rule {
+    priority    = 20
+    description = "Keep only the latest 30 images."
+    selection {
+      tag_status       = "tagged"
+      tag_pattern_list = ["${var.container.name}-*"]
+      count_type       = "imageCountMoreThan"
+      count_number     = 30
+    }
+  }
+}
+
+data "aws_ecr_lifecycle_policy_document" "buildcache" {
   rule {
     priority    = 10
     description = "Expire build cache after 7 days."
     selection {
-      tag_status       = "tagged"
-      tag_pattern_list = ["cache*"]
-      count_type       = "sinceImagePushed"
-      count_unit       = "days"
-      count_number     = 7
+      tag_status   = "any"
+      count_type   = "sinceImagePushed"
+      count_unit   = "days"
+      count_number = 7
     }
   }
+}
+
+data "aws_ecr_image" "ecs_svc" {
+  repository_name = aws_ecr_repository.ecs_svc_repo.name
+  image_tag       = var.container.tag
 }
