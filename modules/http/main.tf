@@ -139,7 +139,7 @@ resource "aws_lb" "alb" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_sg.id]
-  subnets            = [for subnet in var.vpc_subnet_ids : subnet]
+  subnets            = keys(data.aws_subnet.vpc_public_subnets)
   tags = merge({
     Name = "${var.id}-${var.container.name}-alb",
     TFID = var.id
@@ -322,7 +322,7 @@ resource "aws_ecs_service" "http" {
   network_configuration {
     assign_public_ip = false
     security_groups  = [aws_security_group.http_sg.id, data.aws_security_group.cluster.id]
-    subnets          = keys(data.aws_subnet.vpc_subnets)
+    subnets          = keys(data.aws_subnet.vpc_private_subnets)
   }
 
   load_balancer {

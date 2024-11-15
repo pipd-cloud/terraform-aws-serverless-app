@@ -16,6 +16,16 @@ variable "aws_tags" {
 variable "vpc_id" {
   description = "The ID of the AWS VPC."
   type        = string
+
+}
+variable "vpc_public_subnets" {
+  description = "The IDs of the public subnets in the VPC."
+  type        = list(string)
+}
+
+variable "vpc_private_subnets" {
+  description = "The IDs of the private subnets in the VPC."
+  type        = list(string)
 }
 
 variable "sns_topic" {
@@ -30,13 +40,6 @@ variable "ecs_cluster_inbound_sg_ids" {
 }
 
 ## HTTP Service
-variable "http_vpc_subnet_ids" {
-  description = "The list of subnet IDs to use for the HTTP service."
-  type        = list(string)
-  default     = []
-}
-
-
 variable "http_container" {
   description = "The container definition for the main ECS task."
   type = object({
@@ -106,12 +109,6 @@ variable "db_inbound_sg_ids" {
   default     = []
 }
 
-
-variable "db_vpc_subnet_ids" {
-  description = "The IDs of the subnets in the VPC to use with the database."
-  type        = list(string)
-}
-
 variable "db_source_snapshot" {
   description = "The snapshot from which to create the database."
   type        = string
@@ -165,10 +162,6 @@ variable "cache_inbound_sg_ids" {
   default     = []
 }
 
-variable "cache_vpc_subnet_ids" {
-  description = "The IDs of the subnets in the VPC to use with the cache."
-  type        = list(string)
-}
 
 variable "cache_config" {
   description = "The configuration for the cache."

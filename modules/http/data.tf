@@ -6,8 +6,17 @@ data "aws_vpc" "vpc" {
   id = var.vpc_id
 }
 
-data "aws_subnet" "vpc_subnets" {
-  for_each = toset(var.vpc_subnet_ids)
+data "aws_subnet" "vpc_public_subnets" {
+  for_each = toset(var.vpc_public_subnets)
+  id       = each.value
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.vpc.id]
+  }
+}
+
+data "aws_subnet" "vpc_private_subnets" {
+  for_each = toset(var.vpc_private_subnets)
   id       = each.value
   filter {
     name   = "vpc-id"

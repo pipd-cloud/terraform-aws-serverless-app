@@ -22,7 +22,8 @@ module "http" {
   policy              = var.http_policy
   sns_topic           = var.sns_topic
   vpc_id              = var.vpc_id
-  vpc_subnet_ids      = var.http_vpc_subnet_ids
+  vpc_public_subnets  = var.vpc_public_subnets
+  vpc_private_subnets = var.vpc_private_subnets
 }
 
 module "database" {
@@ -38,7 +39,7 @@ module "database" {
   security_groups = concat([module.ecs_cluster.cluster_sg.id], var.db_inbound_sg_ids)
   sns_topic       = var.sns_topic
   vpc_id          = var.vpc_id
-  vpc_subnet_ids  = var.db_vpc_subnet_ids
+  vpc_subnet_ids  = var.vpc_private_subnets
 }
 
 module "cache" {
@@ -50,5 +51,5 @@ module "cache" {
   sns_topic       = var.sns_topic
   security_groups = concat([module.ecs_cluster.cluster_sg.id], var.cache_inbound_sg_ids)
   vpc_id          = var.vpc_id
-  vpc_subnet_ids  = var.cache_vpc_subnet_ids
+  vpc_subnet_ids  = var.vpc_private_subnets
 }
