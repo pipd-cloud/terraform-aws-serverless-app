@@ -94,8 +94,8 @@ data "aws_iam_policy_document" "task_policy" {
 
 # ACM
 data "aws_acm_certificate" "alb_certificate" {
+  count       = var.alb ? 1 : 0
   domain      = var.acm_domain
-  statuses    = ["ISSUED"]
   most_recent = true
 }
 

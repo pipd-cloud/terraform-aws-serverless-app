@@ -69,7 +69,8 @@ resource "aws_security_group" "ecs_svc_sg" {
   }, var.aws_tags)
 }
 
-resource "aws_vpc_security_group_ingress_rule" "ecs_svc_sg" {
+resource "aws_vpc_security_group_ingress_rule" "ecs_svc_sg_alb" {
+  count                        = var.alb ? 1 : 0
   security_group_id            = aws_security_group.ecs_svc_sg.id
   description                  = "Allow traffic on port ${var.container.port} from the load balancer."
   from_port                    = var.container.port
@@ -129,6 +130,7 @@ resource "aws_iam_role_policy_attachment" "managed_policies" {
 # Elastic Load Balancing
 ## Load Balancer
 resource "aws_lb" "alb" {
+  count              = var.alb ? 1 : 0
   name               = "${var.id}-${var.container.name}-alb"
   internal           = false
   load_balancer_type = "application"
@@ -142,6 +144,7 @@ resource "aws_lb" "alb" {
 
 ## Target Group
 resource "aws_lb_target_group" "ecs_svc_tg" {
+  count                = var.alb ? 1 : 0
   name                 = "${var.id}-${var.container.name}-tg"
   deregistration_delay = 300
   port                 = 80
@@ -164,11 +167,12 @@ resource "aws_lb_target_group" "ecs_svc_tg" {
 
 ## Listeners
 resource "aws_lb_listener" "https" {
+  count = var.alb ? 1 : 0
   lifecycle {
-    replace_triggered_by = [aws_lb_target_group.ecs_svc_tg]
+    replace_triggered_by = [aws_lb_target_group.ecs_svc_tg[0]]
   }
-  load_balancer_arn = aws_lb.alb.arn
-  certificate_arn   = data.aws_acm_certificate.alb_certificate.arn
+  load_balancer_arn = aws_lb.alb[0].arn
+  certificate_arn   = data.aws_acm_certificate.alb_certificate[0].arn
   port              = 443
   protocol          = "HTTPS"
   tags = merge({
@@ -177,12 +181,13 @@ resource "aws_lb_listener" "https" {
   }, var.aws_tags)
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.ecs_svc_tg.arn
+    target_group_arn = aws_lb_target_group.ecs_svc_tg[0].arn
   }
 }
 
 resource "aws_lb_listener" "http" {
-  load_balancer_arn = aws_lb.alb.arn
+  count             = var.alb ? 1 : 0
+  load_balancer_arn = aws_lb.alb[0].arn
   port              = 80
   protocol          = "HTTP"
   tags = merge({
@@ -281,6 +286,8 @@ resource "aws_ecs_task_definition" "ecs_svc" {
             awslogs-stream-prefix = "ecs"
           }
         }
+      },
+      var.alb ? {
         healthCheck = {
           command = [
             "CMD-SHELL",
@@ -291,7 +298,7 @@ resource "aws_ecs_task_definition" "ecs_svc" {
           retries     = 3
           startPeriod = 60
         }
-      }
+      } : {}
     )
   ])
   runtime_platform {
@@ -317,10 +324,7 @@ resource "aws_ecs_service" "ecs_svc" {
     TFID = var.id
   }, var.aws_tags)
   # ECS deployment configuration
-  force_new_deployment = true
-  triggers = {
-    redeployment = plantimestamp()
-  }
+  force_new_deployment               = true
   deployment_minimum_healthy_percent = 50
   deployment_maximum_percent         = 200
   # wait_for_steady_state              = true
@@ -337,12 +341,20 @@ resource "aws_ecs_service" "ecs_svc" {
     subnets          = keys(data.aws_subnet.vpc_private_subnets)
   }
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.ecs_svc_tg.arn
-    container_name   = var.container.name
-    container_port   = var.container.port
-  }
+  # load_balancer {
+  #   target_group_arn = aws_lb_target_group.ecs_svc_tg.arn
+  #   container_name   = var.container.name
+  #   container_port   = var.container.port
+  # }
 
+  dynamic "load_balancer" {
+    for_each = var.alb ? [1] : []
+    content {
+      target_group_arn = aws_lb_target_group.ecs_svc_tg[0].arn
+      container_name   = var.container.name
+      container_port   = var.container.port
+    }
+  }
   # Compute configuration
   capacity_provider_strategy {
     capacity_provider = "FARGATE"
