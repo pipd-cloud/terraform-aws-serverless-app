@@ -148,5 +148,5 @@ data "aws_ecr_lifecycle_policy_document" "buildcache" {
 
 data "aws_ecr_image" "ecs_svc" {
   repository_name = aws_ecr_repository.ecs_svc_repo.name
-  image_tag       = var.container.tag
+  most_recent     = true
 }

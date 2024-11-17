@@ -44,7 +44,6 @@ variable "ecs_services" {
   type = map(object({
     container = object({
       name    = string
-      tag     = string
       port    = number
       cpu     = optional(number, 2048)
       memory  = optional(number, 4096)
