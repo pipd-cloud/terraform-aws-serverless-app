@@ -32,18 +32,18 @@ variable "security_groups" {
   description = "The IDs of the security groups that may access these resources."
   type        = list(string)
   default     = []
-} 
+}
 
 variable "config" {
   description = "The configuration for the cache."
   type = object({
     data_storage = object({
-      min = optional(number, 1)
-      max = optional(number, 10)
+      min = number
+      max = number
     })
     ecpu = object({
-      min = optional(number, 1000)
-      max = optional(number, 10000)
+      min = number
+      max = number
     })
     ttl = object({
       create = optional(string, "40m")
@@ -54,11 +54,11 @@ variable "config" {
   default = {
     data_storage = {
       min = 1
-      max = 10
+      max = 2
     }
     ecpu = {
       min = 1000
-      max = 10000
+      max = 2000
     }
     ttl = {
       create = "40m"

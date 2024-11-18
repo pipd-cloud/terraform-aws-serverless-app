@@ -32,13 +32,23 @@ variable "security_groups" {
   description = "The IDs of the security groups that may access these resources."
   type        = list(string)
   default     = []
-} 
+}
 
 variable "source_snapshot" {
   description = "The snapshot from which to create the database."
   type        = string
   nullable    = true
   default     = null
+}
+
+variable "engine" {
+  description = "The engine to use for the database."
+  type        = string
+  default     = "postgresql"
+  validation {
+    condition     = contains(["mysql", "postgresql"], var.engine)
+    error_message = "The engine must be either 'mysql' or 'postgresql'."
+  }
 }
 
 variable "engine_version" {

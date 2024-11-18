@@ -119,14 +119,26 @@ resource "random_id" "final_snapshot_id" {
   byte_length = 8
 }
 
+resource "aws_rds_cluster_parameter_group" "cluster" {
+  name   = "${var.id}-aurora-${var.engine}${var.engine_version}"
+  family = "aurora-${var.engine}${var.engine_version}"
+}
+
+resource "aws_db_parameter_group" "instance" {
+  name   = "${var.id}-aurora-${var.engine}${var.engine_version}"
+  family = "aurora-${var.engine}${var.engine_version}"
+}
+
 resource "aws_rds_cluster" "cluster" {
-  cluster_identifier   = "${var.id}-rds-cluster"
-  engine               = "aurora-postgresql"
-  db_subnet_group_name = aws_db_subnet_group.cluster_subnet_group.name
+  cluster_identifier               = "${var.id}-rds-cluster"
+  engine                           = "aurora-${var.engine}"
+  db_cluster_parameter_group_name  = aws_rds_cluster_parameter_group.cluster.name
+  db_instance_parameter_group_name = aws_db_parameter_group.instance.name
   engine_version = (
     var.source_snapshot != null ?
     data.aws_db_snapshot.source[0].engine_version : var.engine_version
   )
+
   final_snapshot_identifier   = "${var.id}-rds-cluster-final-${random_id.final_snapshot_id.hex}"
   master_username             = var.source_snapshot == null ? "root" : null
   manage_master_user_password = true
@@ -137,6 +149,7 @@ resource "aws_rds_cluster" "cluster" {
   allow_major_version_upgrade = true
   storage_encrypted           = true
   copy_tags_to_snapshot       = true
+  db_subnet_group_name        = aws_db_subnet_group.cluster_subnet_group.name
   vpc_security_group_ids      = [aws_security_group.cluster.id]
   tags = merge({
     Name = "${var.id}-rds-cluster"
@@ -147,7 +160,8 @@ resource "aws_rds_cluster" "cluster" {
     max_capacity = var.acu_config.max
   }
   lifecycle {
-    ignore_changes = [snapshot_identifier]
+    create_before_destroy = true
+    ignore_changes        = [snapshot_identifier]
   }
 }
 
@@ -193,10 +207,11 @@ resource "aws_iam_role_policy_attachment" "proxy_policy_attachment" {
   role       = aws_iam_role.proxy_role[0].name
 }
 
+
 resource "aws_db_proxy" "proxy" {
   count                  = var.proxy ? 1 : 0
   name                   = "${var.id}-rds-proxy"
-  engine_family          = "POSTGRESQL"
+  engine_family          = upper(var.engine)
   idle_client_timeout    = 3600
   vpc_subnet_ids         = data.aws_subnet.vpc_subnets[*].id
   vpc_security_group_ids = [aws_security_group.proxy[0].id]

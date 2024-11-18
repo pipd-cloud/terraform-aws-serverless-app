@@ -13,7 +13,3 @@ output "cluster_sg" {
   value       = aws_security_group.cluster_sg
 }
 
-output "cluster_secrets" {
-  description = "The cluster secrets."
-  value       = aws_secretsmanager_secret.cluster_secrets
-}
