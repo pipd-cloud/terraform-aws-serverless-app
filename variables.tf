@@ -77,6 +77,7 @@ variable "ecs_services" {
       min_capacity       = 1
       max_capacity       = 8
       cpu_target         = 70
+      memory_target      = 70
       scale_in_cooldown  = 60
       scale_out_cooldown = 60
     })

@@ -390,3 +390,71 @@ resource "aws_appautoscaling_policy" "ecs_svc_asg_policy" {
     scale_out_cooldown = var.scale_policy.scale_out_cooldown
   }
 }
+
+resource "aws_appautoscaling_policy" "ecs_svc_asg_memory_policy" {
+  name               = "${var.id}-${var.container.name}-memory-asg-policy"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.ecs_svc_asg.resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs_svc_asg.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.ecs_svc_asg.service_namespace
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ECSServiceAverageMemoryUtilization"
+    }
+    target_value       = var.scale_policy.memory_target
+    scale_in_cooldown  = var.scale_policy.scale_in_cooldown
+    scale_out_cooldown = var.scale_policy.scale_out_cooldown
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "cpu" {
+  alarm_name          = "${var.id}-${var.container.name}-svc-cpu-alarm"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 3
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/ECS"
+  period              = 60
+  statistic           = "Average"
+  threshold           = var.scale_policy.cpu_target
+  dimensions = {
+    ClusterName = data.aws_ecs_cluster.ecs_cluster.cluster_name
+    ServiceName = aws_ecs_service.ecs_svc.name
+  }
+  tags = merge({
+    Name = "${var.id}-${var.container.name}-cpu-alarm",
+    TFID = var.id
+  }, var.aws_tags)
+}
+resource "aws_cloudwatch_metric_alarm" "memory" {
+  alarm_name          = "${var.id}-${var.container.name}-svc-memory-alarm"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 3
+  metric_name         = "MemoryUtilization"
+  namespace           = "AWS/ECS"
+  period              = 60
+  statistic           = "Average"
+  threshold           = var.scale_policy.memory_target
+  dimensions = {
+    ClusterName = data.aws_ecs_cluster.ecs_cluster.cluster_name
+    ServiceName = aws_ecs_service.ecs_svc.name
+  }
+  tags = merge({
+    Name = "${var.id}-${var.container.name}-memory-alarm",
+    TFID = var.id
+  }, var.aws_tags)
+}
+
+resource "aws_cloudwatch_composite_alarm" "service_alarm" {
+  alarm_name    = "${var.id}-${var.container.name}-service-alarm"
+  alarm_rule    = "ALARM(\"${aws_cloudwatch_metric_alarm.cpu.alarm_name}\") OR ALARM(\"${aws_cloudwatch_metric_alarm.memory.alarm_name}\")"
+  alarm_actions = [var.sns_topic]
+  tags = merge({
+    Name = "${var.id}-${var.container.name}-service-alarm",
+    TFID = var.id
+  }, var.aws_tags)
+  depends_on = [
+    aws_cloudwatch_metric_alarm.cpu,
+    aws_cloudwatch_metric_alarm.memory
+  ]
+}
+

@@ -112,6 +112,7 @@ variable "scale_policy" {
     min_capacity       = number
     max_capacity       = number
     cpu_target         = optional(number, 70)
+    memory_target      = optional(number, 70)
     scale_in_cooldown  = optional(number, 60)
     scale_out_cooldown = optional(number, 60)
   })
