@@ -53,5 +53,5 @@ module "cache" {
   sns_topic       = var.sns_topic
   security_groups = concat([module.ecs_cluster.cluster_sg.id], var.cache_inbound_sg_ids)
   vpc_id          = var.vpc_id
-  vpc_subnet_ids  = var.vpc_private_subnets
+  vpc_subnet_ids  = length(var.vpc_private_subnets) > 3 ? slice(var.vpc_private_subnets, 0, 3) : var.vpc_private_subnets
 }
