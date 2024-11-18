@@ -370,7 +370,7 @@ resource "aws_appautoscaling_target" "ecs_svc_asg" {
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
   tags = merge({
-    Name = "${var.id}-${var.container.name}-asg",
+    Name = "${var.id}-${var.container.name}-svc-asg",
     TFID = var.id
   }, var.aws_tags)
 }
@@ -421,7 +421,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu" {
     ServiceName = aws_ecs_service.ecs_svc.name
   }
   tags = merge({
-    Name = "${var.id}-${var.container.name}-cpu-alarm",
+    Name = "${var.id}-${var.container.name}-svc-cpu-alarm",
     TFID = var.id
   }, var.aws_tags)
 }
@@ -439,17 +439,17 @@ resource "aws_cloudwatch_metric_alarm" "memory" {
     ServiceName = aws_ecs_service.ecs_svc.name
   }
   tags = merge({
-    Name = "${var.id}-${var.container.name}-memory-alarm",
+    Name = "${var.id}-${var.container.name}-svc-memory-alarm",
     TFID = var.id
   }, var.aws_tags)
 }
 
 resource "aws_cloudwatch_composite_alarm" "service_alarm" {
-  alarm_name    = "${var.id}-${var.container.name}-service-alarm"
+  alarm_name    = "${var.id}-${var.container.name}-svc-alarm"
   alarm_rule    = "ALARM(\"${aws_cloudwatch_metric_alarm.cpu.alarm_name}\") OR ALARM(\"${aws_cloudwatch_metric_alarm.memory.alarm_name}\")"
   alarm_actions = [var.sns_topic]
   tags = merge({
-    Name = "${var.id}-${var.container.name}-service-alarm",
+    Name = "${var.id}-${var.container.name}-svc-alarm",
     TFID = var.id
   }, var.aws_tags)
   depends_on = [
