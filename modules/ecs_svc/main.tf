@@ -408,7 +408,8 @@ resource "aws_appautoscaling_policy" "ecs_svc_asg_memory_policy" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu" {
-  alarm_name          = "${var.id}-${var.container.name}-svc-cpu-alarm"
+  alarm_name          = "${aws_ecs_service.ecs_svc.name}-cpu-alarm"
+  alarm_description   = "CPU usage on ECS service ${aws_ecs_service.ecs_svc.name} is too high"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 3
   metric_name         = "CPUUtilization"
@@ -426,7 +427,8 @@ resource "aws_cloudwatch_metric_alarm" "cpu" {
   }, var.aws_tags)
 }
 resource "aws_cloudwatch_metric_alarm" "memory" {
-  alarm_name          = "${var.id}-${var.container.name}-svc-memory-alarm"
+  alarm_name          = "${aws_ecs_service.ecs_svc.name}-memory-alarm"
+  alarm_description   = "Memory usage on ECS service ${aws_ecs_service.ecs_svc.name} is too high"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 3
   metric_name         = "MemoryUtilization"
@@ -445,9 +447,10 @@ resource "aws_cloudwatch_metric_alarm" "memory" {
 }
 
 resource "aws_cloudwatch_composite_alarm" "service_alarm" {
-  alarm_name    = "${var.id}-${var.container.name}-svc-alarm"
+  alarm_name    = "${aws_ecs_service.ecs_svc.name}-composite-alarm"
   alarm_rule    = "ALARM(\"${aws_cloudwatch_metric_alarm.cpu.alarm_name}\") OR ALARM(\"${aws_cloudwatch_metric_alarm.memory.alarm_name}\")"
   alarm_actions = [var.sns_topic]
+  ok_actions    = [var.sns_topic]
   tags = merge({
     Name = "${var.id}-${var.container.name}-svc-alarm",
     TFID = var.id

@@ -245,3 +245,48 @@ resource "aws_db_proxy_target" "cluster" {
   db_proxy_name         = aws_db_proxy.proxy[0].name
   target_group_name     = aws_db_proxy_default_target_group.proxy_tg[0].name
 }
+
+# Metric alarm for cluster CPU utilization
+resource "aws_cloudwatch_metric_alarm" "db_cluster_cpu" {
+  alarm_name          = "${aws_rds_cluster.cluster.cluster_identifier}-cpu-alarm"
+  alarm_description   = "High CPU usage on ${aws_rds_cluster.cluster.cluster_identifier} RDS cluster."
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 3
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/RDS"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 70
+  alarm_actions       = [var.sns_topic]
+  ok_actions          = [var.sns_topic]
+  dimensions = {
+    DBClusterIdentifier = aws_rds_cluster.cluster.id
+  }
+  tags = merge({
+    Name = "${var.id}-rds-cluster-cpu"
+    TFID = var.id
+  }, var.aws_tags)
+}
+
+# Metric alarms for the DB instances
+resource "aws_cloudwatch_metric_alarm" "db_cpu" {
+  count               = var.instance_count
+  alarm_name          = "${aws_rds_cluster.cluster.cluster_identifier}-${count.index}-cpu-alarm"
+  alarm_description   = "High CPU usage on ${aws_rds_cluster.cluster.cluster_identifier}-${count.index} RDS instance."
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 3
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/RDS"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 70
+  alarm_actions       = [var.sns_topic]
+  ok_actions          = [var.sns_topic]
+  dimensions = {
+    DBInstanceIdentifier = "${aws_rds_cluster.cluster.id}-${count.index}"
+  }
+  tags = merge({
+    Name = "${var.id}-rds-cpu-${count.index}"
+    TFID = var.id
+  }, var.aws_tags)
+}
