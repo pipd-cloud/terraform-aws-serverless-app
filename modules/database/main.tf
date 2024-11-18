@@ -106,7 +106,7 @@ resource "aws_vpc_security_group_egress_rule" "proxy_outbound" {
 ## Subnet group
 resource "aws_db_subnet_group" "cluster_subnet_group" {
   name       = "${var.id}-db-cluster-subnet-group"
-  subnet_ids = keys(data.aws_subnet.vpc_subnets)
+  subnet_ids = data.aws_subnet.vpc_subnets[*].id
   tags = merge({
     Name = "${var.id}-db-cluster-subnet-group"
     TFID = var.id
@@ -198,7 +198,7 @@ resource "aws_db_proxy" "proxy" {
   name                   = "${var.id}-rds-proxy"
   engine_family          = "POSTGRESQL"
   idle_client_timeout    = 3600
-  vpc_subnet_ids         = keys(data.aws_subnet.vpc_subnets)
+  vpc_subnet_ids         = data.aws_subnet.vpc_subnets[*].id
   vpc_security_group_ids = [aws_security_group.proxy[0].id]
   role_arn               = aws_iam_role.proxy_role[0].arn
   tags = merge({

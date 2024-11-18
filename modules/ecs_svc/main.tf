@@ -135,7 +135,7 @@ resource "aws_lb" "alb" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_sg[0].id]
-  subnets            = keys(data.aws_subnet.vpc_public_subnets)
+  subnets            = data.aws_subnet.vpc_public_subnets[*].id
   tags = merge({
     Name = "${var.id}-${var.container.name}-alb",
     TFID = var.id
@@ -338,14 +338,9 @@ resource "aws_ecs_service" "ecs_svc" {
   network_configuration {
     assign_public_ip = false
     security_groups  = [aws_security_group.ecs_svc_sg.id, data.aws_security_group.cluster.id]
-    subnets          = keys(data.aws_subnet.vpc_private_subnets)
+    subnets          = data.aws_subnet.vpc_private_subnets[*].id
   }
 
-  # load_balancer {
-  #   target_group_arn = aws_lb_target_group.ecs_svc_tg.arn
-  #   container_name   = var.container.name
-  #   container_port   = var.container.port
-  # }
 
   dynamic "load_balancer" {
     for_each = var.alb ? [1] : []

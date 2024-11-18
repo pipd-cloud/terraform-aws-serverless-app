@@ -37,7 +37,7 @@ resource "aws_elasticache_serverless_cache" "redis" {
   engine             = "redis"
   name               = "${var.id}-redis-cache"
   description        = "Redis cache associated with the ${var.id} deployment."
-  subnet_ids         = keys(data.aws_subnet.vpc_subnets)
+  subnet_ids         = data.aws_subnet.vpc_subnets[*].id
   security_group_ids = [aws_security_group.redis.id]
   tags = merge({
     Name = "${var.id}-redis-cache"
