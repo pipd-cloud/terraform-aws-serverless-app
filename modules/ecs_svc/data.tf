@@ -150,8 +150,3 @@ data "aws_ecr_image" "ecs_svc" {
   repository_name = aws_ecr_repository.ecs_svc_repo.name
   most_recent     = true
 }
-
-# Topic
-data "aws_sns_topic" "topic" {
-  name = var.sns_topic
-}
