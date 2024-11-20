@@ -52,7 +52,7 @@ resource "aws_vpc_security_group_egress_rule" "alb_sg_all" {
 }
 ## Secrets
 resource "aws_secretsmanager_secret" "ecs_svc_secrets" {
-  name        = "${var.id}-${var.container.name}-ecs-svc-secrets"
+  name_prefix = "${var.id}-${var.container.name}-ecs-svc-secrets"
   description = "Secrets used by the ${var.container.name} container."
   tags = merge({
     Name = "${var.id}-${var.container.name}-ecs-svc-secrets",

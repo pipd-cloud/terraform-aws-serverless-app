@@ -118,7 +118,7 @@ resource "aws_ecs_cluster" "cluster" {
 
 # SecretsManager
 resource "aws_secretsmanager_secret" "cluster_secrets" {
-  name        = "${var.id}-ecs-cluster-secrets"
+  name_prefix = "${var.id}-ecs-cluster-secrets"
   description = "General secrets that are available to all ECS Services."
   tags = merge({
     Name = "${var.id}-ecs-cluster-secrets"
