@@ -111,6 +111,7 @@ resource "aws_db_subnet_group" "cluster_subnet_group" {
     Name = "${var.id}-db-cluster-subnet-group"
     TFID = var.id
   }, var.aws_tags)
+  depends_on = [data.aws_vpc.vpc]
   lifecycle {
     create_before_destroy = true
   }
