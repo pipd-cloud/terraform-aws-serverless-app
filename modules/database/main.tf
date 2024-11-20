@@ -145,7 +145,7 @@ resource "aws_rds_cluster" "cluster" {
   manage_master_user_password = true
   snapshot_identifier = (
     var.source_snapshot == null ?
-    null : data.aws_db_cluster_snapshot.source[0].db_snapshot_arn
+    null : data.aws_db_cluster_snapshot.source[0].db_cluster_snapshot_arn
   )
   allow_major_version_upgrade = true
   storage_encrypted           = true
