@@ -112,9 +112,6 @@ resource "aws_db_subnet_group" "cluster_subnet_group" {
     TFID = var.id
   }, var.aws_tags)
   depends_on = [data.aws_vpc.vpc]
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 # RDS

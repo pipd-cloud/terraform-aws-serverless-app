@@ -29,9 +29,9 @@ data "aws_security_group" "inbound" {
 
 # RDS
 ## Source snapshot (Restore from snapshot)
-data "aws_db_snapshot" "source" {
-  count                  = var.source_snapshot != null ? 1 : 0
-  db_snapshot_identifier = var.source_snapshot
+data "aws_db_cluster_snapshot" "source" {
+  count                          = var.source_snapshot != null ? 1 : 0
+  db_cluster_snapshot_identifier = var.source_snapshot
 }
 
 ## RDS Proxy
