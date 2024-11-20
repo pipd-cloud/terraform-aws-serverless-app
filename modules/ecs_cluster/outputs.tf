@@ -5,7 +5,7 @@ output "task_execution_role" {
 
 output "cluster" {
   description = "The ECS cluster."
-  value       = aws_ecs_cluster.ecs_cluster
+  value       = aws_ecs_cluster.cluster
 }
 
 output "cluster_sg" {
@@ -13,3 +13,7 @@ output "cluster_sg" {
   value       = aws_security_group.cluster_sg
 }
 
+output "cluster_secrets" {
+  description = "The cluster secrets."
+  value       = aws_secretsmanager_secret.cluster_secrets
+}

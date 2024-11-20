@@ -43,6 +43,11 @@ variable "cluster_name" {
   type        = string
 }
 
+variable "cluster_secrets" {
+  description = "The ARN of the secrets manager secret containing the ECS cluster secrets."
+  type        = string
+}
+
 variable "task_execution_role" {
   description = "The name of the IAM role that the ECS task orchestrator must assume."
   type        = string
@@ -101,8 +106,9 @@ variable "container" {
       name  = string
       value = string
     }))
-    secret_keys        = optional(list(string), [])
-    health_check_route = optional(string, "/")
+    secret_keys         = optional(list(string), [])
+    cluster_secret_keys = optional(list(string), [])
+    health_check_route  = optional(string, "/")
   })
 }
 

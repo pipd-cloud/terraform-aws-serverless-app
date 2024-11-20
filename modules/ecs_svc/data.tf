@@ -150,3 +150,7 @@ data "aws_ecr_image" "ecs_svc" {
   repository_name = aws_ecr_repository.ecs_svc_repo.name
   most_recent     = true
 }
+
+data "aws_secretsmanager_secret" "cluster_secrets" {
+  arn = var.cluster_secrets
+}

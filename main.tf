@@ -17,6 +17,7 @@ module "ecs_svc" {
   acm_domain          = each.value.alb != null ? each.value.alb.domain : null
   cluster_name        = module.ecs_cluster.cluster.name
   cluster_sg          = module.ecs_cluster.cluster_sg.id
+  cluster_secrets     = module.ecs_cluster.cluster_secrets.arn
   container           = each.value.container
   scale_policy        = each.value.scale_policy
   task_execution_role = module.ecs_cluster.task_execution_role.name

@@ -98,7 +98,7 @@ resource "aws_iam_role_policy_attachment" "task_exeuctor_policy" {
 }
 
 # ECS
-resource "aws_ecs_cluster" "ecs_cluster" {
+resource "aws_ecs_cluster" "cluster" {
   depends_on = [aws_kms_key.cmk_fargate]
   name       = "${var.id}-ecs-cluster"
   tags = merge({
@@ -114,4 +114,14 @@ resource "aws_ecs_cluster" "ecs_cluster" {
     name  = "containerInsights"
     value = "enabled"
   }
+}
+
+# SecretsManager
+resource "aws_secretsmanager_secret" "cluster_secrets" {
+  name        = "${var.id}-ecs-cluster-secrets"
+  description = "General secrets that are available to all ECS Services."
+  tags = merge({
+    Name = "${var.id}-ecs-cluster-secrets"
+    TFID = var.id
+  }, var.aws_tags)
 }

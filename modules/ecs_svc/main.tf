@@ -268,13 +268,22 @@ resource "aws_ecs_task_definition" "ecs_svc" {
       essential = true },
       length(var.container.command) > 0 ? { command = var.container.command } : {},
       { environment = var.container.environment
-        secrets = [
-          for key in var.container.secret_keys :
-          {
-            name      = key,
-            valueFrom = "${aws_secretsmanager_secret.ecs_svc_secrets.arn}:${key}::"
-          }
-        ]
+        secrets = concat(
+          [
+            for key in var.container.secret_keys :
+            {
+              name      = key,
+              valueFrom = "${aws_secretsmanager_secret.ecs_svc_secrets.arn}:${key}::"
+            }
+          ],
+          [
+            for key in var.container.cluster_secret_keys :
+            {
+              name      = key,
+              valueFrom = "${data.aws_secretsmanager_secret.cluster_secrets.arn}:${key}::"
+            }
+          ]
+        )
         logConfiguration = {
           logDriver = "awslogs",
           options = {
