@@ -137,7 +137,7 @@ resource "aws_rds_cluster" "cluster" {
   db_instance_parameter_group_name = aws_db_parameter_group.instance.name
   engine_version = (
     var.source_snapshot != null ?
-    data.aws_db_snapshot.source[0].engine_version : var.engine_version
+    data.aws_db_cluster_snapshot.source[0].engine_version : var.engine_version
   )
 
   final_snapshot_identifier   = "${var.id}-rds-cluster-final-${random_id.final_snapshot_id.hex}"
@@ -145,7 +145,7 @@ resource "aws_rds_cluster" "cluster" {
   manage_master_user_password = true
   snapshot_identifier = (
     var.source_snapshot == null ?
-    null : data.aws_db_snapshot.source[0].db_snapshot_arn
+    null : data.aws_db_cluster_snapshot.source[0].db_snapshot_arn
   )
   allow_major_version_upgrade = true
   storage_encrypted           = true
