@@ -209,6 +209,9 @@ resource "aws_ecr_repository" "ecs_svc_repo" {
   name                 = "${var.id}-${var.container.name}"
   image_tag_mutability = "IMMUTABLE"
   force_delete         = true
+  image_scanning_configuration {
+    scan_on_push = true
+  }
   tags = merge({
     Name = "${var.id}-${var.container.name}",
     TFID = var.id
