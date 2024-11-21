@@ -169,7 +169,7 @@ resource "aws_lb_target_group" "ecs_svc_tg" {
 resource "aws_lb_listener" "https" {
   count = var.alb ? 1 : 0
   lifecycle {
-    replace_triggered_by = [aws_lb_target_group.ecs_svc_tg[0]]
+    replace_triggered_by = [aws_lb_target_group.ecs_svc_tg[0], data.aws_acm_certificate.alb_certificate[0]]
   }
   load_balancer_arn = aws_lb.alb[0].arn
   certificate_arn   = data.aws_acm_certificate.alb_certificate[0].arn
