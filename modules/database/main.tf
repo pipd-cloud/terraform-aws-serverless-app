@@ -147,11 +147,12 @@ resource "aws_rds_cluster" "cluster" {
     var.source_snapshot == null ?
     null : data.aws_db_cluster_snapshot.source[0].db_cluster_snapshot_arn
   )
-  allow_major_version_upgrade = true
-  storage_encrypted           = true
-  copy_tags_to_snapshot       = true
-  db_subnet_group_name        = aws_db_subnet_group.cluster_subnet_group.name
-  vpc_security_group_ids      = [aws_security_group.cluster.id]
+  iam_database_authentication_enabled = true
+  allow_major_version_upgrade         = true
+  storage_encrypted                   = true
+  copy_tags_to_snapshot               = true
+  db_subnet_group_name                = aws_db_subnet_group.cluster_subnet_group.name
+  vpc_security_group_ids              = [aws_security_group.cluster.id]
   tags = merge({
     Name = "${var.id}-rds-cluster"
     TFID = var.id
