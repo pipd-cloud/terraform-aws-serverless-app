@@ -60,7 +60,7 @@ resource "aws_ecs_task_definition" "worker" {
     merge(
       {
         name      = var.container.name
-        image     = data.aws_ecr_image.worker.image_uri
+        image     = var.container.tag != null ? data.aws_ecr_image.worker_requested[0].image_uri : data.aws_ecr_image.worker_latest.image_uri
         essential = true
       },
       length(var.container.command) > 0 ? { command = var.container.command } : {},
