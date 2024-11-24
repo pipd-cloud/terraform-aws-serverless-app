@@ -82,9 +82,7 @@ variable "ecs_services" {
       scale_in_cooldown  = 60
       scale_out_cooldown = 60
     })
-    alb = optional(object({
-      domain = string
-    }), null)
+    domain = optional(string)
   }))
 }
 

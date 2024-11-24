@@ -14,14 +14,13 @@ module "ecr_service_repos" {
   repo     = var.ecs_services[count.index].container.name
 }
 
-module "ecs_svc" {
+module "ecs_services" {
   count               = length(var.ecs_services)
   depends_on          = [module.ecr_service_repos, module.ecs_cluster]
-  source              = "./modules/ecs_svc"
+  source              = "./modules/ecs_services"
   id                  = var.id
   aws_tags            = var.aws_tags
-  alb                 = var.ecs_services[count.index].alb != null
-  acm_domain          = var.ecs_services[count.index].alb != null ? var.ecs_services[count.index].alb.domain : null
+  acm_domain          = var.ecs_services[count.index].domain
   cluster_name        = module.ecs_cluster.cluster.name
   cluster_sg          = module.ecs_cluster.cluster_sg.id
   cluster_secrets     = module.ecs_cluster.cluster_secrets.arn

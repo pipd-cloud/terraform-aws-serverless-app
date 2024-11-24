@@ -5,5 +5,5 @@ output "secrets" {
 
 output "alb" {
   description = "The ALB of the service if it is a webservice."
-  value       = var.alb ? aws_lb.alb : []
+  value       = aws_lb.alb
 }

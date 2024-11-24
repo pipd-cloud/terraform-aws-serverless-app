@@ -54,21 +54,11 @@ variable "task_execution_role" {
 }
 
 # ALB
-variable "alb" {
-  description = "Whether the application is fronted by an ALB."
-  type        = bool
-  default     = false
-}
-
 variable "acm_domain" {
   description = "The domain to use for the ACM certificate."
   type        = string
   nullable    = true
   default     = null
-  validation {
-    condition     = !var.alb || var.acm_domain != null
-    error_message = "The variable 'acm_domain' must be set when 'alb' is true."
-  }
 }
 
 # IAM

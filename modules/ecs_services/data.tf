@@ -88,7 +88,7 @@ data "aws_iam_policy_document" "task_policy" {
 }
 
 data "aws_acm_certificate" "alb_certificate" {
-  count       = var.alb ? 1 : 0
+  count       = var.acm_domain != null ? 1 : 0
   domain      = var.acm_domain
   most_recent = true
 }

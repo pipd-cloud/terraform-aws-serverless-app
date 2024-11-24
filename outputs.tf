@@ -1,5 +1,6 @@
 output "load_balancers" {
-  value = [for i in range(length(module.ecs_svc)) : module.ecs_svc[i].alb]
+  description = "Load balancers for the services."
+  value       = module.ecs_services[*].alb
 }
 
 output "aurora_cluster" {

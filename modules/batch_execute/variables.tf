@@ -36,6 +36,22 @@ variable "cluster_sg" {
   type        = string
 }
 
+# Cluster Configuration
+variable "batch_compute" {
+  description = "The configuration for the AWS Batch compute environment."
+  type = object({
+    type      = optional(string, "FARGATE_SPOT")
+    max_vcpus = optional(number, 32)
+  })
+  default = {
+    max_vcpus = 32
+  }
+  validation {
+    condition     = contains(["FARGATE_SPOT", "FARGATE"], var.batch_compute.type)
+    error_message = "The compute type must be either 'FARGATE_SPOT' or 'FARGATE'."
+  }
+}
+
 # Notifications
 variable "sns_topic" {
   description = "The ARN of the SNS topic to which notifications are sent."
