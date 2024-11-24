@@ -41,9 +41,10 @@ variable "ecs_cluster_inbound_sg_ids" {
 
 variable "ecs_services" {
   description = "The list of ECS services to create."
-  type = map(object({
+  type = list(object({
     container = object({
       name    = string
+      tag     = optional(string)
       port    = number
       cpu     = optional(number, 2048)
       memory  = optional(number, 4096)

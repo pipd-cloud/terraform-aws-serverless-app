@@ -204,45 +204,7 @@ resource "aws_lb_listener" "http" {
   }
 }
 
-# ECR
-resource "aws_ecr_repository" "ecs_svc_repo" {
-  name                 = "${var.id}-${var.container.name}"
-  image_tag_mutability = "IMMUTABLE"
-  force_delete         = true
-  image_scanning_configuration {
-    scan_on_push = true
-  }
-  tags = merge({
-    Name = "${var.id}-${var.container.name}",
-    TFID = var.id
-  }, var.aws_tags)
-  encryption_configuration {
-    encryption_type = "KMS"
-  }
-}
 
-resource "aws_ecr_lifecycle_policy" "ecs_svc_repo_lifecycle" {
-  repository = aws_ecr_repository.ecs_svc_repo.name
-  policy     = data.aws_ecr_lifecycle_policy_document.ecs_svc.json
-}
-
-resource "aws_ecr_repository" "buildcache_repo" {
-  name                 = "${var.id}-${var.container.name}-buildcache"
-  image_tag_mutability = "MUTABLE"
-  force_delete         = true
-  tags = merge({
-    Name = "${var.id}-${var.container.name}-buildcache",
-    TFID = var.id
-  }, var.aws_tags)
-  encryption_configuration {
-    encryption_type = "KMS"
-  }
-}
-
-resource "aws_ecr_lifecycle_policy" "buildcache_repo_lifecycle" {
-  repository = aws_ecr_repository.buildcache_repo.name
-  policy     = data.aws_ecr_lifecycle_policy_document.buildcache.json
-}
 
 # ECS
 ## Task definition

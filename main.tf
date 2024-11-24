@@ -6,23 +6,31 @@ module "ecs_cluster" {
   security_groups = var.ecs_cluster_inbound_sg_ids
   vpc_id          = var.vpc_id
 }
+module "ecr_service_repos" {
+  count    = length(var.ecs_services)
+  source   = "./modules/ecr_task"
+  id       = var.id
+  aws_tags = var.aws_tags
+  repo     = var.ecs_services[count.index].container.name
+}
 
 module "ecs_svc" {
-  for_each            = var.ecs_services
-  depends_on          = [module.ecs_cluster.cluster]
+  count               = length(var.ecs_services)
+  depends_on          = [module.ecr_service_repos, module.ecs_cluster]
   source              = "./modules/ecs_svc"
   id                  = var.id
   aws_tags            = var.aws_tags
-  alb                 = each.value.alb != null
-  acm_domain          = each.value.alb != null ? each.value.alb.domain : null
+  alb                 = var.ecs_services[count.index].alb != null
+  acm_domain          = var.ecs_services[count.index].alb != null ? each.value.alb.domain : null
   cluster_name        = module.ecs_cluster.cluster.name
   cluster_sg          = module.ecs_cluster.cluster_sg.id
   cluster_secrets     = module.ecs_cluster.cluster_secrets.arn
-  container           = each.value.container
-  scale_policy        = each.value.scale_policy
+  container           = var.ecs_services[count.index].container
+  ecr_repo            = module.ecr_service_repos[count.index].task_repo.name
+  scale_policy        = var.ecs_services[count.index].scale_policy
   task_execution_role = module.ecs_cluster.task_execution_role.name
-  managed_policies    = each.value.iam_managed_policies
-  policy              = each.value.iam_custom_policy
+  managed_policies    = var.ecs_services[count.index].iam_managed_policies
+  policy              = var.ecs_services[count.index].iam_custom_policy
   sns_topic           = var.sns_topic
   vpc_id              = var.vpc_id
   vpc_public_subnets  = var.vpc_public_subnets
@@ -56,3 +64,4 @@ module "cache" {
   vpc_id          = var.vpc_id
   vpc_subnet_ids  = length(var.vpc_private_subnets) > 3 ? slice(var.vpc_private_subnets, 0, 3) : var.vpc_private_subnets
 }
+

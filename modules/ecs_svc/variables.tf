@@ -93,11 +93,17 @@ variable "policy" {
   }))
 }
 
+# Container
+variable "ecr_repo" {
+  description = "The ECR repo in which the service task images are stored."
+  type        = string
+}
 
 variable "container" {
   description = "The container definition for the main ECS task."
   type = object({
     name    = string
+    tag     = optional(string)
     port    = number
     cpu     = number
     memory  = number
