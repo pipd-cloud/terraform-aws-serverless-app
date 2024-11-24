@@ -11,7 +11,7 @@ module "ecr_service_repos" {
   source   = "./modules/ecr_task"
   id       = var.id
   aws_tags = var.aws_tags
-  repo     = var.ecs_services[count.index].container.name
+  repo     = "${var.ecs_services[count.index].container.name}-service"
 }
 
 module "ecr_worker_repos" {
@@ -19,7 +19,7 @@ module "ecr_worker_repos" {
   source   = "./modules/ecr_task"
   id       = var.id
   aws_tags = var.aws_tags
-  repo     = var.ecs_workers[count.index].container.name
+  repo     = "${var.ecs_workers[count.index].container.name}-worker"
 }
 
 module "ecs_services" {
