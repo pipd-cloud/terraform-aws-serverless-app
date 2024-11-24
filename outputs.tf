@@ -1,9 +1,5 @@
-output "alb" {
-  value = { for k, v in module.ecs_svc : k => v.alb }
-}
-
 output "load_balancers" {
-  value = { for k, v in module.ecs_svc : k => v.alb }
+  value = [for i in range(length(module.ecs_svc)) : module.ecs_svc[i].alb]
 }
 
 output "aurora_cluster" {
