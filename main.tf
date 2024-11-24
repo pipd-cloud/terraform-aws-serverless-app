@@ -21,7 +21,7 @@ module "ecs_svc" {
   id                  = var.id
   aws_tags            = var.aws_tags
   alb                 = var.ecs_services[count.index].alb != null
-  acm_domain          = var.ecs_services[count.index].alb != null ? each.value.alb.domain : null
+  acm_domain          = var.ecs_services[count.index].alb != null ? var.ecs_services[count.index].alb.domain : null
   cluster_name        = module.ecs_cluster.cluster.name
   cluster_sg          = module.ecs_cluster.cluster_sg.id
   cluster_secrets     = module.ecs_cluster.cluster_secrets.arn
