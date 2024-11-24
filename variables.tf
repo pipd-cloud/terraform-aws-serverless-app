@@ -86,6 +86,49 @@ variable "ecs_services" {
   }))
 }
 
+variable "ecs_workers" {
+  description = "The list of ECS worksers to create."
+  type = list(object({
+    container = object({
+      name    = string
+      tag     = optional(string)
+      cpu     = optional(number, 2048)
+      memory  = optional(number, 4096)
+      command = optional(list(string), [])
+      environment = optional(list(object({
+        name  = string
+        value = string
+      })), [])
+      secret_keys = optional(list(string), [])
+    })
+    iam_custom_policy = optional(list(object({
+      sid       = string
+      effect    = string
+      actions   = list(string)
+      resources = list(string)
+      conditions = optional(list(object({
+        test     = string
+        variable = string
+        values   = list(string)
+      })), [])
+    })), [])
+    iam_managed_policies = optional(list(string), [])
+    scale_policy = optional(object({
+      min_capacity       = number
+      max_capacity       = number
+      cpu_target         = number
+      scale_in_cooldown  = number
+      scale_out_cooldown = number
+      }), {
+      min_capacity       = 1
+      max_capacity       = 8
+      cpu_target         = 70
+      memory_target      = 70
+      scale_in_cooldown  = 60
+      scale_out_cooldown = 60
+    })
+  }))
+}
 ## Database
 variable "db_inbound_sg_ids" {
   description = "The list of security groups that may access the database."

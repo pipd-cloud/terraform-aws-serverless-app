@@ -4,14 +4,6 @@ data "aws_vpc" "vpc" {
   id = var.vpc_id
 }
 
-data "aws_subnet" "vpc_public_subnets" {
-  count = length(var.vpc_public_subnets)
-  id    = var.vpc_public_subnets[count.index]
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.vpc.id]
-  }
-}
 
 data "aws_subnet" "vpc_private_subnets" {
   count = length(var.vpc_private_subnets)
@@ -87,12 +79,6 @@ data "aws_iam_policy_document" "task_policy" {
   }
 }
 
-data "aws_acm_certificate" "alb_certificate" {
-  count       = var.acm_domain != null ? 1 : 0
-  domain      = var.acm_domain
-  most_recent = true
-}
-
 data "aws_ecs_cluster" "ecs_cluster" {
   cluster_name = var.cluster_name
 }
@@ -101,7 +87,7 @@ data "aws_ecr_repository" "task" {
   name = var.ecr_repo
 }
 
-data "aws_ecr_image" "ecs_svc" {
+data "aws_ecr_image" "worker" {
   repository_name = data.aws_ecr_repository.task.name
   image_tag       = var.container.tag
   most_recent     = var.container.tag != null ? true : null

@@ -2,10 +2,10 @@
 ## Load Balancer
 resource "aws_security_group" "alb_sg" {
   description = "The application load balancer (${var.container.name}) security group."
-  name        = "${var.id}-${var.container.name}-ecs-svc-alb-sg"
+  name        = "${var.id}-${var.container.name}-service-alb-sg"
   vpc_id      = var.vpc_id
   tags = merge({
-    Name = "${var.id}-${var.container.name}-ecs-svc-alb-sg",
+    Name = "${var.id}-${var.container.name}-service-alb-sg",
     TFID = var.id
   }, var.aws_tags)
 }
@@ -19,7 +19,7 @@ resource "aws_vpc_security_group_ingress_rule" "alb_sg_https" {
   ip_protocol       = "tcp"
   cidr_ipv4         = "0.0.0.0/0"
   tags = merge({
-    Name = "${var.id}-${var.container.name}-ecs-svc-alb-sg-https",
+    Name = "${var.id}-${var.container.name}-service-alb-sg-https",
     TFID = var.id
   }, var.aws_tags)
 }
@@ -32,7 +32,7 @@ resource "aws_vpc_security_group_ingress_rule" "alb_sg_http" {
   ip_protocol       = "tcp"
   cidr_ipv4         = "0.0.0.0/0"
   tags = merge({
-    Name = "${var.id}-${var.container.name}-ecs-svc-alb-sg-http",
+    Name = "${var.id}-${var.container.name}-service-alb-sg-http",
     TFID = var.id
   }, var.aws_tags)
 }
@@ -43,49 +43,49 @@ resource "aws_vpc_security_group_egress_rule" "alb_sg_all" {
   ip_protocol       = -1
   cidr_ipv4         = "0.0.0.0/0"
   tags = merge({
-    Name = "${var.id}-${var.container.name}-ecs-svc-alb-sg-all",
+    Name = "${var.id}-${var.container.name}-service-alb-sg-all",
     TFID = var.id
   }, var.aws_tags)
 }
 ## Secrets
-resource "aws_secretsmanager_secret" "ecs_svc_secrets" {
-  name_prefix = "${var.id}-${var.container.name}-ecs-svc-secrets"
+resource "aws_secretsmanager_secret" "service_secrets" {
+  name_prefix = "${var.id}-${var.container.name}-service-secrets"
   description = "Secrets used by the ${var.container.name} container."
   tags = merge({
-    Name = "${var.id}-${var.container.name}-ecs-svc-secrets",
+    Name = "${var.id}-${var.container.name}-service-secrets",
     TFID = var.id
   }, var.aws_tags)
 }
 ## Service
-resource "aws_security_group" "ecs_svc_sg" {
-  name   = "${var.id}-${var.container.name}-ecs-svc-sg"
+resource "aws_security_group" "service_sg" {
+  name   = "${var.id}-${var.container.name}-service-sg"
   vpc_id = var.vpc_id
   tags = merge({
-    Name = "${var.id}-${var.container.name}-ecs-svc-sg",
+    Name = "${var.id}-${var.container.name}-service-sg",
     TFID = var.id
   }, var.aws_tags)
 }
 
-resource "aws_vpc_security_group_ingress_rule" "ecs_svc_sg_alb" {
-  security_group_id            = aws_security_group.ecs_svc_sg.id
+resource "aws_vpc_security_group_ingress_rule" "service_sg_alb" {
+  security_group_id            = aws_security_group.service_sg.id
   description                  = "Allow traffic on port ${var.container.port} from the load balancer."
   from_port                    = var.container.port
   to_port                      = var.container.port
   ip_protocol                  = "tcp"
   referenced_security_group_id = aws_security_group.alb_sg.id
   tags = merge({
-    Name = "${var.id}-${var.container.name}-ecs-svc-sg-https",
+    Name = "${var.id}-${var.container.name}-service-sg-https",
     TFID = var.id
   }, var.aws_tags)
 }
 
-resource "aws_vpc_security_group_egress_rule" "ecs_svc_all" {
+resource "aws_vpc_security_group_egress_rule" "service_all" {
   description       = "Allow all outbound traffic."
-  security_group_id = aws_security_group.ecs_svc_sg.id
+  security_group_id = aws_security_group.service_sg.id
   ip_protocol       = -1
   cidr_ipv4         = "0.0.0.0/0"
   tags = merge({
-    Name = "${var.id}-${var.container.name}-ecs-svc-sg-all",
+    Name = "${var.id}-${var.container.name}-service-sg-all",
     TFID = var.id
   }, var.aws_tags)
 }
@@ -93,21 +93,21 @@ resource "aws_vpc_security_group_egress_rule" "ecs_svc_all" {
 # IAM
 ## Container
 resource "aws_iam_role" "task_role" {
-  name_prefix        = "ECSTaskRole_"
+  name_prefix        = "ECSServiceTaskRole_"
   description        = "Task role that is assumed by running containers."
   assume_role_policy = data.aws_iam_policy_document.ecs_trust_policy.json
   tags = merge({
-    Name = "ECSTaskRole"
+    Name = "ECSServiceTaskRole"
     TFID = var.id
   }, var.aws_tags)
 }
 
 resource "aws_iam_policy" "task_policy" {
-  name_prefix = "ECSTaskPolicy_"
+  name_prefix = "ECSServiceTaskPolicy_"
   description = "Policies that are granted to running containers."
   policy      = data.aws_iam_policy_document.task_policy.json
   tags = merge({
-    Name = "ECSTaskPolicy"
+    Name = "ECSServiceTaskPolicy"
     TFID = var.id
   }, var.aws_tags)
 }
@@ -138,7 +138,7 @@ resource "aws_lb" "alb" {
 }
 
 ## Target Group
-resource "aws_lb_target_group" "ecs_svc_tg" {
+resource "aws_lb_target_group" "service_tg" {
   name                 = "${var.id}-${var.container.name}-tg"
   deregistration_delay = 300
   port                 = var.container.port
@@ -163,19 +163,19 @@ resource "aws_lb_target_group" "ecs_svc_tg" {
 resource "aws_lb_listener" "https" {
   count = var.acm_domain != null ? 1 : 0
   lifecycle {
-    replace_triggered_by = [aws_lb_target_group.ecs_svc_tg]
+    replace_triggered_by = [aws_lb_target_group.service_tg]
   }
   load_balancer_arn = aws_lb.alb.arn
   certificate_arn   = data.aws_acm_certificate.alb_certificate[0].arn
   port              = 443
   protocol          = "HTTPS"
   tags = merge({
-    Name = "${var.id}-${var.container.name}-ecs-svc-alb-https",
+    Name = "${var.id}-${var.container.name}-service-alb-https",
     TFID = var.id
   }, var.aws_tags)
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.ecs_svc_tg.arn
+    target_group_arn = aws_lb_target_group.service_tg.arn
   }
 }
 
@@ -185,7 +185,7 @@ resource "aws_lb_listener" "http" {
   port              = 80
   protocol          = "HTTP"
   tags = merge({
-    Name = "${var.id}-${var.container.name}-ecs-svc-alb-http",
+    Name = "${var.id}-${var.container.name}-service-alb-http",
     TFID = var.id
   }, var.aws_tags)
   default_action {
@@ -205,33 +205,33 @@ resource "aws_lb_listener" "http_fwd" {
   port              = 80
   protocol          = "HTTP"
   tags = merge({
-    Name = "${var.id}-${var.container.name}-ecs-svc-alb-http",
+    Name = "${var.id}-${var.container.name}-service-alb-http",
     TFID = var.id
   }, var.aws_tags)
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.ecs_svc_tg.arn
+    target_group_arn = aws_lb_target_group.service_tg.arn
   }
 }
 
 # ECS
 ## Task definition
-resource "aws_ecs_task_definition" "ecs_svc" {
-  family             = "${var.id}-${var.container.name}-task-definition"
+resource "aws_ecs_task_definition" "service" {
+  family             = "${var.id}-${var.container.name}-service-task"
   task_role_arn      = aws_iam_role.task_role.arn
   execution_role_arn = data.aws_iam_role.task_execution_role.arn
   network_mode       = "awsvpc"
   cpu                = var.container.cpu
   memory             = var.container.memory
   tags = merge({
-    Name = "${var.id}-${var.container.name}-task-definition",
+    Name = "${var.id}-${var.container.name}-service-task",
     TFID = var.id
   }, var.aws_tags)
   container_definitions = jsonencode([
     merge(
       {
         name  = var.container.name
-        image = data.aws_ecr_image.ecs_svc.image_uri
+        image = data.aws_ecr_image.service.image_uri
         portMappings = [{
           containerPort = var.container.port
           hostPost      = var.container.port
@@ -246,7 +246,7 @@ resource "aws_ecs_task_definition" "ecs_svc" {
             for key in var.container.secret_keys :
             {
               name      = key,
-              valueFrom = "${aws_secretsmanager_secret.ecs_svc_secrets.arn}:${key}::"
+              valueFrom = "${aws_secretsmanager_secret.service_secrets.arn}:${key}::"
             }
           ],
           [
@@ -288,11 +288,11 @@ resource "aws_ecs_task_definition" "ecs_svc" {
 }
 
 ## Service
-resource "aws_ecs_service" "ecs_svc" {
+resource "aws_ecs_service" "service" {
   depends_on             = [aws_iam_role.task_role]
-  name                   = "${var.id}-${var.container.name}-svc"
+  name                   = "${var.id}-${var.container.name}-sevice"
   cluster                = data.aws_ecs_cluster.ecs_cluster.arn
-  task_definition        = aws_ecs_task_definition.ecs_svc.arn
+  task_definition        = aws_ecs_task_definition.service.arn
   desired_count          = var.scale_policy.min_capacity
   enable_execute_command = true
 
@@ -300,7 +300,7 @@ resource "aws_ecs_service" "ecs_svc" {
   enable_ecs_managed_tags = true
   propagate_tags          = "SERVICE"
   tags = merge({
-    Name = "${var.id}-${var.container.name}-svc",
+    Name = "${var.id}-${var.container.name}-sevice",
     TFID = var.id
   }, var.aws_tags)
   # ECS deployment configuration
@@ -317,12 +317,12 @@ resource "aws_ecs_service" "ecs_svc" {
   # Network configuration
   network_configuration {
     assign_public_ip = false
-    security_groups  = [aws_security_group.ecs_svc_sg.id, data.aws_security_group.cluster.id]
+    security_groups  = [aws_security_group.service_sg.id, data.aws_security_group.cluster.id]
     subnets          = data.aws_subnet.vpc_private_subnets[*].id
   }
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.ecs_svc_tg.arn
+    target_group_arn = aws_lb_target_group.service_tg.arn
     container_name   = var.container.name
     container_port   = var.container.port
   }
@@ -340,24 +340,24 @@ resource "aws_ecs_service" "ecs_svc" {
 }
 
 ## Autoscaling
-resource "aws_appautoscaling_target" "ecs_svc_asg" {
+resource "aws_appautoscaling_target" "service_asg" {
   max_capacity       = var.scale_policy.max_capacity
   min_capacity       = var.scale_policy.min_capacity
-  resource_id        = "service/${data.aws_ecs_cluster.ecs_cluster.cluster_name}/${aws_ecs_service.ecs_svc.name}"
+  resource_id        = "service/${data.aws_ecs_cluster.ecs_cluster.cluster_name}/${aws_ecs_service.service.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
   tags = merge({
-    Name = "${var.id}-${var.container.name}-svc-asg",
+    Name = "${var.id}-${var.container.name}-sevice-asg",
     TFID = var.id
   }, var.aws_tags)
 }
 
-resource "aws_appautoscaling_policy" "ecs_svc_asg_policy" {
+resource "aws_appautoscaling_policy" "service_asg_policy" {
   name               = "${var.id}-${var.container.name}-cpu-asg-policy"
   policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.ecs_svc_asg.resource_id
-  scalable_dimension = aws_appautoscaling_target.ecs_svc_asg.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.ecs_svc_asg.service_namespace
+  resource_id        = aws_appautoscaling_target.service_asg.resource_id
+  scalable_dimension = aws_appautoscaling_target.service_asg.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.service_asg.service_namespace
   target_tracking_scaling_policy_configuration {
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageCPUUtilization"
@@ -368,12 +368,12 @@ resource "aws_appautoscaling_policy" "ecs_svc_asg_policy" {
   }
 }
 
-resource "aws_appautoscaling_policy" "ecs_svc_asg_memory_policy" {
+resource "aws_appautoscaling_policy" "service_asg_memory_policy" {
   name               = "${var.id}-${var.container.name}-memory-asg-policy"
   policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.ecs_svc_asg.resource_id
-  scalable_dimension = aws_appautoscaling_target.ecs_svc_asg.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.ecs_svc_asg.service_namespace
+  resource_id        = aws_appautoscaling_target.service_asg.resource_id
+  scalable_dimension = aws_appautoscaling_target.service_asg.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.service_asg.service_namespace
   target_tracking_scaling_policy_configuration {
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageMemoryUtilization"
@@ -385,8 +385,8 @@ resource "aws_appautoscaling_policy" "ecs_svc_asg_memory_policy" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu" {
-  alarm_name          = "${aws_ecs_service.ecs_svc.name}-cpu-alarm"
-  alarm_description   = "CPU usage on ECS service ${aws_ecs_service.ecs_svc.name} is too high"
+  alarm_name          = "${aws_ecs_service.service.name}-cpu-alarm"
+  alarm_description   = "CPU usage on ECS service ${aws_ecs_service.service.name} is too high"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 3
   metric_name         = "CPUUtilization"
@@ -396,16 +396,16 @@ resource "aws_cloudwatch_metric_alarm" "cpu" {
   threshold           = var.scale_policy.cpu_target
   dimensions = {
     ClusterName = data.aws_ecs_cluster.ecs_cluster.cluster_name
-    ServiceName = aws_ecs_service.ecs_svc.name
+    ServiceName = aws_ecs_service.service.name
   }
   tags = merge({
-    Name = "${var.id}-${var.container.name}-svc-cpu-alarm",
+    Name = "${var.id}-${var.container.name}-sevice-cpu-alarm",
     TFID = var.id
   }, var.aws_tags)
 }
 resource "aws_cloudwatch_metric_alarm" "memory" {
-  alarm_name          = "${aws_ecs_service.ecs_svc.name}-memory-alarm"
-  alarm_description   = "Memory usage on ECS service ${aws_ecs_service.ecs_svc.name} is too high"
+  alarm_name          = "${aws_ecs_service.service.name}-memory-alarm"
+  alarm_description   = "Memory usage on ECS service ${aws_ecs_service.service.name} is too high"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 3
   metric_name         = "MemoryUtilization"
@@ -415,21 +415,21 @@ resource "aws_cloudwatch_metric_alarm" "memory" {
   threshold           = var.scale_policy.memory_target
   dimensions = {
     ClusterName = data.aws_ecs_cluster.ecs_cluster.cluster_name
-    ServiceName = aws_ecs_service.ecs_svc.name
+    ServiceName = aws_ecs_service.service.name
   }
   tags = merge({
-    Name = "${var.id}-${var.container.name}-svc-memory-alarm",
+    Name = "${var.id}-${var.container.name}-sevice-memory-alarm",
     TFID = var.id
   }, var.aws_tags)
 }
 
 resource "aws_cloudwatch_composite_alarm" "service_alarm" {
-  alarm_name    = "${aws_ecs_service.ecs_svc.name}-composite-alarm"
+  alarm_name    = "${aws_ecs_service.service.name}-composite-alarm"
   alarm_rule    = "ALARM(\"${aws_cloudwatch_metric_alarm.cpu.alarm_name}\") OR ALARM(\"${aws_cloudwatch_metric_alarm.memory.alarm_name}\")"
   alarm_actions = [var.sns_topic]
   ok_actions    = [var.sns_topic]
   tags = merge({
-    Name = "${var.id}-${var.container.name}-svc-alarm",
+    Name = "${var.id}-${var.container.name}-sevice-alarm",
     TFID = var.id
   }, var.aws_tags)
   depends_on = [

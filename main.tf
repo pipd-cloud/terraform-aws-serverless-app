@@ -14,10 +14,18 @@ module "ecr_service_repos" {
   repo     = var.ecs_services[count.index].container.name
 }
 
+module "ecr_worker_repos" {
+  count    = length(var.ecs_workers)
+  source   = "./modules/ecr_task"
+  id       = var.id
+  aws_tags = var.aws_tags
+  repo     = var.ecs_workers[count.index].container.name
+}
+
 module "ecs_services" {
   count               = length(var.ecs_services)
   depends_on          = [module.ecr_service_repos, module.ecs_cluster]
-  source              = "./modules/ecs_services"
+  source              = "./modules/ecs_service"
   id                  = var.id
   aws_tags            = var.aws_tags
   acm_domain          = var.ecs_services[count.index].domain
@@ -36,6 +44,26 @@ module "ecs_services" {
   vpc_private_subnets = var.vpc_private_subnets
 }
 
+module "ecs_workers" {
+  count               = length(var.ecs_workers)
+  depends_on          = [module.ecr_worker_repos, module.ecs_cluster]
+  source              = "./modules/ecs_worker"
+  id                  = var.id
+  aws_tags            = var.aws_tags
+  cluster_name        = module.ecs_cluster.cluster.name
+  cluster_sg          = module.ecs_cluster.cluster_sg.id
+  cluster_secrets     = module.ecs_cluster.cluster_secrets.arn
+  container           = var.ecs_workers[count.index].container
+  ecr_repo            = module.ecr_worker_repos[count.index].task_repo.name
+  scale_policy        = var.ecs_workers[count.index].scale_policy
+  task_execution_role = module.ecs_cluster.task_execution_role.name
+  managed_policies    = var.ecs_workers[count.index].iam_managed_policies
+  policy              = var.ecs_workers[count.index].iam_custom_policy
+  sns_topic           = var.sns_topic
+  vpc_id              = var.vpc_id
+  vpc_public_subnets  = var.vpc_public_subnets
+  vpc_private_subnets = var.vpc_private_subnets
+}
 module "database" {
   depends_on      = [module.ecs_cluster.cluster]
   source          = "./modules/database"
