@@ -194,8 +194,8 @@ resource "aws_appautoscaling_policy" "worker_asg_memory_policy" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu" {
-  alarm_name          = "${aws_ecs_service.service.name}-cpu-alarm"
-  alarm_description   = "CPU usage on ECS service ${aws_ecs_service.service.name} is too high"
+  alarm_name          = "${aws_ecs_service.worker.name}-cpu-alarm"
+  alarm_description   = "CPU usage on ECS service ${aws_ecs_service.worker.name} is too high"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 3
   metric_name         = "CPUUtilization"
@@ -205,7 +205,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu" {
   threshold           = var.scale_policy.cpu_target
   dimensions = {
     ClusterName = data.aws_ecs_cluster.ecs_cluster.cluster_name
-    ServiceName = aws_ecs_service.service.name
+    ServiceName = aws_ecs_service.worker.name
   }
   tags = merge({
     Name = "${var.id}-${var.container.name}-worker-cpu-alarm",
@@ -213,8 +213,8 @@ resource "aws_cloudwatch_metric_alarm" "cpu" {
   }, var.aws_tags)
 }
 resource "aws_cloudwatch_metric_alarm" "memory" {
-  alarm_name          = "${aws_ecs_service.service.name}-memory-alarm"
-  alarm_description   = "Memory usage on ECS service ${aws_ecs_service.service.name} is too high"
+  alarm_name          = "${aws_ecs_service.worker.name}-memory-alarm"
+  alarm_description   = "Memory usage on ECS service ${aws_ecs_service.worker.name} is too high"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 3
   metric_name         = "MemoryUtilization"
@@ -224,7 +224,7 @@ resource "aws_cloudwatch_metric_alarm" "memory" {
   threshold           = var.scale_policy.memory_target
   dimensions = {
     ClusterName = data.aws_ecs_cluster.ecs_cluster.cluster_name
-    ServiceName = aws_ecs_service.service.name
+    ServiceName = aws_ecs_service.worker.name
   }
   tags = merge({
     Name = "${var.id}-${var.container.name}-worker-memory-alarm",
@@ -233,7 +233,7 @@ resource "aws_cloudwatch_metric_alarm" "memory" {
 }
 
 resource "aws_cloudwatch_composite_alarm" "service_alarm" {
-  alarm_name    = "${aws_ecs_service.service.name}-composite-alarm"
+  alarm_name    = "${aws_ecs_service.worker.name}-composite-alarm"
   alarm_rule    = "ALARM(\"${aws_cloudwatch_metric_alarm.cpu.alarm_name}\") OR ALARM(\"${aws_cloudwatch_metric_alarm.memory.alarm_name}\")"
   alarm_actions = [var.sns_topic]
   ok_actions    = [var.sns_topic]
