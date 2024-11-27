@@ -28,3 +28,11 @@ variable "vpc_id" {
   description = "The ID of the AWS VPC."
   type        = string
 }
+
+variable "secrets" {
+  description = "A set of secrets to store on Secrets Manager for this cluster."
+  type        = map(string)
+  nullable    = true
+  default     = null
+  sensitive   = true
+}

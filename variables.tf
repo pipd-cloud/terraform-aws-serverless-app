@@ -39,6 +39,15 @@ variable "ecs_cluster_inbound_sg_ids" {
   default     = []
 }
 
+variable "ecs_cluster_secrets" {
+  description = "A set of secrets to store on Secrets Manager for the ECS cluster."
+  type        = map(string)
+  nullable    = true
+  default     = null
+  sensitive   = true
+}
+
+
 variable "ecs_services" {
   description = "The list of ECS services to create."
   type = list(
@@ -113,7 +122,6 @@ variable "ecs_services" {
             scale_out_cooldown = 60
           }
         )
-        secrets = optional(map(string))
         load_balancer = optional(
           object(
             {
@@ -134,8 +142,7 @@ variable "ecs_services" {
       }
     )
   )
-  default   = []
-  sensitive = true
+  default = []
 }
 
 

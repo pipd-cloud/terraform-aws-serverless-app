@@ -150,14 +150,7 @@ resource "aws_secretsmanager_secret" "service" {
   }, var.aws_tags)
 }
 
-resource "aws_secretsmanager_secret_version" "service" {
-  count         = var.secrets != null ? 1 : 0
-  secret_id     = aws_secretsmanager_secret.service
-  secret_string = jsonencode(var.secrets)
-  lifecycle {
-    prevent_destroy = true
-  }
-}
+
 
 # IAM
 ## Container

@@ -140,10 +140,3 @@ variable "scale_policy" {
 }
 
 
-variable "secrets" {
-  description = "A set of secrets to store on Secrets Manager for this service."
-  type        = map(string)
-  nullable    = true
-  default     = null
-  sensitive   = true
-}

@@ -4,8 +4,10 @@ module "ecs_cluster" {
   aws_tags        = var.aws_tags
   sns_topic       = var.sns_topic
   security_groups = var.ecs_cluster_inbound_sg_ids
+  secrets         = var.ecs_cluster_secrets
   vpc_id          = var.vpc_id
 }
+
 module "ecr_service_repos" {
   count    = length(var.ecs_services)
   source   = "./modules/ecr"
@@ -13,8 +15,6 @@ module "ecr_service_repos" {
   aws_tags = var.aws_tags
   repo     = "${var.ecs_services[count.index].container.name}-service"
 }
-
-
 
 module "ecr_batch_repo" {
   count    = var.batch != null ? 1 : 0
@@ -40,7 +40,6 @@ module "ecs_services" {
   task_execution_role = module.ecs_cluster.task_execution_role.name
   managed_policies    = var.ecs_services[count.index].iam_managed_policies
   policy              = var.ecs_services[count.index].iam_custom_policy
-  secrets             = var.ecs_services[count.index].secrets
   sns_topic           = var.sns_topic
   vpc_id              = var.vpc_id
   vpc_public_subnets  = var.vpc_public_subnets

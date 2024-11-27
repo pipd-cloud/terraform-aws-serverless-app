@@ -125,3 +125,9 @@ resource "aws_secretsmanager_secret" "cluster_secrets" {
     TFID = var.id
   }, var.aws_tags)
 }
+
+resource "aws_secretsmanager_secret_version" "cluster" {
+  count         = var.secrets != null ? 1 : 0
+  secret_id     = aws_secretsmanager_secret.cluster_secrets
+  secret_string = jsonencode(var.secrets)
+}
