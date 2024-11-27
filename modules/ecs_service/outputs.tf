@@ -5,5 +5,5 @@ output "secrets" {
 
 output "alb" {
   description = "The ALB of the service if it is a webservice."
-  value       = aws_lb.alb
+  value       = var.load_balancer != null ? aws_load_balancer.alb[0] : null
 }
