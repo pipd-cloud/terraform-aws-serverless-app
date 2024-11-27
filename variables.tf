@@ -63,8 +63,9 @@ variable "ecs_services" {
               ),
               []
             )
-            secret_keys        = optional(list(string), [])
-            health_check_route = optional(string, "/")
+            secret_keys         = optional(list(string), [])
+            cluster_secret_keys = optional(list(string), [])
+            health_check_route  = optional(string, "/")
           }
         )
         iam_custom_policy = optional(
@@ -112,84 +113,94 @@ variable "ecs_services" {
             scale_out_cooldown = 60
           }
         )
-        domain = optional(string)
+        load_balancer = optional(
+          object(
+            {
+              public          = optional(bool, true)
+              security_groups = optional(list(string), [])
+              prefix_lists    = optional(list(string), [])
+              waf             = optional(bool, false)
+              tls = optional(
+                object(
+                  {
+                    domain = string
+                  }
+                )
+              )
+            }
+          )
+        )
       }
     )
   )
   default = []
 }
 
-variable "ecs_workers" {
-  description = "The list of ECS worksers to create."
-  type = list(
-    object(
-      {
-        container = object(
-          {
-            name    = string
-            tag     = optional(string)
-            cpu     = optional(number, 2048)
-            memory  = optional(number, 4096)
-            command = optional(list(string), [])
-            environment = optional(list(
-              object(
-                {
-                  name  = string
-                  value = string
-                }
-              )
-              ),
-              []
-            )
-            secret_keys = optional(list(string), [])
-          }
-        )
-        iam_custom_policy = optional(
-          list(
+
+variable "batch" {
+  description = "The AWS Batch configuration to apply, if any."
+  nullable    = true
+  default     = null
+  type = object(
+    {
+      container = object(
+        {
+          name    = optional(string, "batch")
+          tag     = optional(string)
+          cpu     = optional(number, 1)
+          memory  = optional(number, 2048)
+          command = optional(list(string), [])
+          environment = optional(list(
             object(
               {
-                sid       = string
-                effect    = string
-                actions   = list(string)
-                resources = list(string)
-                conditions = optional(list(object({
-                  test     = string
-                  variable = string
-                  values   = list(string)
-                  }
-                  )
-                  ),
-                  []
-                )
+                name  = string
+                value = string
               }
             )
-          ),
-          []
-        )
-        iam_managed_policies = optional(list(string), [])
-        scale_policy = optional(
+            ),
+            []
+          )
+          secret_keys         = optional(list(string), [])
+          cluster_secret_keys = optional(list(string), [])
+        }
+      )
+      iam_custom_policy = optional(
+        list(
           object(
             {
-              min_capacity       = number
-              max_capacity       = number
-              cpu_target         = number
-              scale_in_cooldown  = number
-              scale_out_cooldown = number
+              sid       = string
+              effect    = string
+              actions   = list(string)
+              resources = list(string)
+              conditions = optional(list(object({
+                test     = string
+                variable = string
+                values   = list(string)
+                }
+                )
+                ),
+                []
+              )
             }
-          ),
+          )
+        ),
+        []
+      )
+      iam_managed_policies = optional(list(string), [])
+      batch_compute = optional(
+        object(
           {
-            min_capacity       = 1
-            max_capacity       = 8
-            cpu_target         = 70
-            memory_target      = 70
-            scale_in_cooldown  = 60
-            scale_out_cooldown = 60
+            type      = optional(string, "FARGATE_SPOT")
+            max_vcpus = optional(number, 16)
           }
-        )
-      }
-    )
+        ),
+        {
+          type      = "FARGATE_SPOT"
+          max_vcpus = 16
+        }
+      )
+    }
   )
-  default = []
 }
 ## Database
 variable "db_inbound_sg_ids" {

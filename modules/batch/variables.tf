@@ -87,11 +87,16 @@ variable "policy" {
 }
 
 # Container Definition
+variable "ecr_repo" {
+  description = "The ECR repo in which the service task images are stored."
+  type        = string
+}
+
 variable "container" {
   description = "The definition of the primary container within the ECS task, specifying its configuration and behavior."
   type = object({
     name    = string
-    port    = number
+    tag     = optional(string)
     cpu     = number
     memory  = number
     command = optional(list(string))
@@ -101,6 +106,6 @@ variable "container" {
     }))
     secret_keys         = optional(list(string), [])
     cluster_secret_keys = optional(list(string), [])
-    health_check_route  = optional(string, "/")
+    attempts            = optional(number, 2)
   })
 }

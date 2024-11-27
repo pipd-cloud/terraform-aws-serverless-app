@@ -1,6 +1,7 @@
 # VPC Security Groups
 ## Load Balancer
-resource "aws_security_group" "alb_sg" {
+resource "aws_security_group" "alb" {
+  count       = var.load_balancer != null ? 1 : 0
   description = "The application load balancer (${var.container.name}) security group."
   name        = "${var.id}-${var.container.name}-service-alb-sg"
   vpc_id      = var.vpc_id
@@ -10,54 +11,102 @@ resource "aws_security_group" "alb_sg" {
   }, var.aws_tags)
 }
 
-resource "aws_vpc_security_group_ingress_rule" "alb_sg_https" {
-  count             = var.acm_domain != null ? 1 : 0
-  security_group_id = aws_security_group.alb_sg.id
-  description       = "Allow all HTTPS traffic."
+resource "aws_vpc_security_group_ingress_rule" "alb_https_public" {
+  count             = var.load_balancer != null ? ((var.load_balancer.tls != null && var.load_balancer.public) ? 1 : 0) : 0
+  security_group_id = aws_security_group.alb[0].id
+  description       = "Allow all HTTPS traffic from public sources."
   from_port         = 443
   to_port           = 443
   ip_protocol       = "tcp"
   cidr_ipv4         = "0.0.0.0/0"
   tags = merge({
-    Name = "${var.id}-${var.container.name}-service-alb-sg-https",
+    Name = "${var.id}-${var.container.name}-service-alb-https-public",
     TFID = var.id
   }, var.aws_tags)
 }
 
-resource "aws_vpc_security_group_ingress_rule" "alb_sg_http" {
-  security_group_id = aws_security_group.alb_sg.id
-  description       = "Allow all HTTP traffic."
+resource "aws_vpc_security_group_ingress_rule" "alb_https_sg" {
+  count                        = var.load_balancer != null ? (var.load_balancer.tls != null ? length(data.aws_security_group.internal) : 0) : 0
+  security_group_id            = aws_security_group.alb[0].id
+  description                  = "Allow all HTTPS traffic from internal sources."
+  from_port                    = 443
+  to_port                      = 443
+  ip_protocol                  = "tcp"
+  referenced_security_group_id = data.aws_security_group.internal[count.index].id
+  tags = merge({
+    Name = "${var.id}-${var.container.name}-service-alb-https-internal-${data.aws_security_group.internal[count.index].id}",
+    TFID = var.id
+  }, var.aws_tags)
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alb_https_pl" {
+  count             = var.load_balancer != null ? (var.load_balancer.tls != null ? length(data.aws_prefix_list.internal) : 0) : 0
+  security_group_id = aws_security_group.alb[0].id
+  description       = "Allow all HTTPS traffic from predefined IP ranges."
+  from_port         = 443
+  to_port           = 443
+  ip_protocol       = "tcp"
+  prefix_list_id    = data.aws_prefix_list.internal[count.index].id
+  tags = merge({
+    Name = "${var.id}-${var.container.name}-service-alb-https-${data.aws_security_group.internal[count.index].id}",
+    TFID = var.id
+  }, var.aws_tags)
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alb_http_public" {
+  count             = var.load_balancer != null ? (var.load_balancer.public ? 1 : 0) : 0
+  security_group_id = aws_security_group.alb[0].id
+  description       = "Allow all HTTP traffic from public sources."
   from_port         = 80
   to_port           = 80
   ip_protocol       = "tcp"
   cidr_ipv4         = "0.0.0.0/0"
   tags = merge({
-    Name = "${var.id}-${var.container.name}-service-alb-sg-http",
+    Name = "${var.id}-${var.container.name}-service-alb-sg-http-public",
+    TFID = var.id
+  }, var.aws_tags)
+}
+resource "aws_vpc_security_group_ingress_rule" "alb_http_sg" {
+  count                        = var.load_balancer != null ? length(data.aws_security_group.internal) : 0
+  security_group_id            = aws_security_group.alb[0].id
+  description                  = "Allow all HTTP traffic from internal sources."
+  from_port                    = 80
+  to_port                      = 80
+  ip_protocol                  = "tcp"
+  referenced_security_group_id = data.aws_security_group.internal[count.index].id
+  tags = merge({
+    name = "${var.id}-${var.container.name}-service-alb-http-internal-${data.aws_security_group.internal[count.index].id}",
     TFID = var.id
   }, var.aws_tags)
 }
 
-resource "aws_vpc_security_group_egress_rule" "alb_sg_all" {
-  security_group_id = aws_security_group.alb_sg.id
+resource "aws_vpc_security_group_ingress_rule" "alb_http_pl" {
+  count             = var.load_balancer != null ? length(data.aws_security_group.internal) : 0
+  security_group_id = aws_security_group.alb[0].id
+  description       = "Allow all HTTP traffic from predefined IP ranges."
+  from_port         = 80
+  to_port           = 80
+  ip_protocol       = "tcp"
+  prefix_list_id    = data.aws_prefix_list.internal[count.index].id
+  tags = merge({
+    name = "${var.id}-${var.container.name}-service-alb-http-${data.aws_prefix_list.internal[count.index].id}",
+    TFID = var.id
+  }, var.aws_tags)
+}
+
+resource "aws_vpc_security_group_egress_rule" "alb_all" {
+  count             = var.load_balancer != null ? 1 : 0
+  security_group_id = aws_security_group.alb[0].id
   description       = "Allow all outbound traffic."
   ip_protocol       = -1
   cidr_ipv4         = "0.0.0.0/0"
   tags = merge({
-    Name = "${var.id}-${var.container.name}-service-alb-sg-all",
+    Name = "${var.id}-${var.container.name}-service-alb-all",
     TFID = var.id
   }, var.aws_tags)
 }
-## Secrets
-resource "aws_secretsmanager_secret" "service_secrets" {
-  name_prefix = "${var.id}-${var.container.name}-service-secrets"
-  description = "Secrets used by the ${var.container.name} container."
-  tags = merge({
-    Name = "${var.id}-${var.container.name}-service-secrets",
-    TFID = var.id
-  }, var.aws_tags)
-}
-## Service
-resource "aws_security_group" "service_sg" {
+
+resource "aws_security_group" "service" {
   name   = "${var.id}-${var.container.name}-service-sg"
   vpc_id = var.vpc_id
   tags = merge({
@@ -66,33 +115,44 @@ resource "aws_security_group" "service_sg" {
   }, var.aws_tags)
 }
 
-resource "aws_vpc_security_group_ingress_rule" "service_sg_alb" {
-  security_group_id            = aws_security_group.service_sg.id
+resource "aws_vpc_security_group_ingress_rule" "service_alb" {
+  count                        = var.load_balancer != null ? 1 : 0
+  security_group_id            = aws_security_group.service.id
   description                  = "Allow traffic on port ${var.container.port} from the load balancer."
   from_port                    = var.container.port
   to_port                      = var.container.port
   ip_protocol                  = "tcp"
-  referenced_security_group_id = aws_security_group.alb_sg.id
+  referenced_security_group_id = aws_security_group.alb[0].id
   tags = merge({
-    Name = "${var.id}-${var.container.name}-service-sg-https",
+    Name = "${var.id}-${var.container.name}-service-alb",
     TFID = var.id
   }, var.aws_tags)
 }
 
 resource "aws_vpc_security_group_egress_rule" "service_all" {
   description       = "Allow all outbound traffic."
-  security_group_id = aws_security_group.service_sg.id
+  security_group_id = aws_security_group.service.id
   ip_protocol       = -1
   cidr_ipv4         = "0.0.0.0/0"
   tags = merge({
-    Name = "${var.id}-${var.container.name}-service-sg-all",
+    Name = "${var.id}-${var.container.name}-service-all",
+    TFID = var.id
+  }, var.aws_tags)
+}
+
+## Secrets
+resource "aws_secretsmanager_secret" "service" {
+  name_prefix = "${var.id}-${var.container.name}-service-secrets"
+  description = "Secrets used by the ${var.container.name} container."
+  tags = merge({
+    Name = "${var.id}-${var.container.name}-service-secrets",
     TFID = var.id
   }, var.aws_tags)
 }
 
 # IAM
 ## Container
-resource "aws_iam_role" "task_role" {
+resource "aws_iam_role" "task" {
   name_prefix        = "ECSServiceTaskRole_"
   description        = "Task role that is assumed by running containers."
   assume_role_policy = data.aws_iam_policy_document.ecs_trust_policy.json
@@ -102,7 +162,7 @@ resource "aws_iam_role" "task_role" {
   }, var.aws_tags)
 }
 
-resource "aws_iam_policy" "task_policy" {
+resource "aws_iam_policy" "task" {
   name_prefix = "ECSServiceTaskPolicy_"
   description = "Policies that are granted to running containers."
   policy      = data.aws_iam_policy_document.task_policy.json
@@ -113,23 +173,23 @@ resource "aws_iam_policy" "task_policy" {
 }
 
 resource "aws_iam_role_policy_attachment" "task" {
-  role       = aws_iam_role.task_role.name
-  policy_arn = aws_iam_policy.task_policy.arn
+  role       = aws_iam_role.task.name
+  policy_arn = aws_iam_policy.task.arn
 }
 
-resource "aws_iam_role_policy_attachment" "managed_policies" {
+resource "aws_iam_role_policy_attachment" "task_managed" {
   for_each   = data.aws_iam_policy.task_managed_policies
-  role       = aws_iam_role.task_role.name
+  role       = aws_iam_role.task.name
   policy_arn = each.value.arn
 }
 
-# Elastic Load Balancing
-## Load Balancer
+# Load balancer
 resource "aws_lb" "alb" {
+  count              = var.load_balancer != null ? 1 : 0
   name               = "${var.id}-${var.container.name}-alb"
   internal           = false
   load_balancer_type = "application"
-  security_groups    = [aws_security_group.alb_sg.id]
+  security_groups    = [aws_security_group.alb[0].id]
   subnets            = data.aws_subnet.vpc_public_subnets[*].id
   tags = merge({
     Name = "${var.id}-${var.container.name}-alb",
@@ -138,7 +198,8 @@ resource "aws_lb" "alb" {
 }
 
 ## Target Group
-resource "aws_lb_target_group" "service_tg" {
+resource "aws_lb_target_group" "service" {
+  count                = var.load_balancer != null ? 1 : 0
   name                 = "${var.id}-${var.container.name}-tg"
   deregistration_delay = 300
   port                 = var.container.port
@@ -161,12 +222,12 @@ resource "aws_lb_target_group" "service_tg" {
 
 ## Listeners
 resource "aws_lb_listener" "https" {
-  count = var.acm_domain != null ? 1 : 0
+  count = var.load_balancer != null ? (var.load_balancer.tls != null ? 1 : 0) : 0
   lifecycle {
-    replace_triggered_by = [aws_lb_target_group.service_tg]
+    replace_triggered_by = [aws_lb_target_group.service]
   }
-  load_balancer_arn = aws_lb.alb.arn
-  certificate_arn   = data.aws_acm_certificate.alb_certificate[0].arn
+  load_balancer_arn = aws_lb.alb[0].arn
+  certificate_arn   = data.aws_acm_certificate.alb[0].arn
   port              = 443
   protocol          = "HTTPS"
   tags = merge({
@@ -175,13 +236,13 @@ resource "aws_lb_listener" "https" {
   }, var.aws_tags)
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.service_tg.arn
+    target_group_arn = aws_lb_target_group.service[0].arn
   }
 }
 
 resource "aws_lb_listener" "http" {
-  count             = var.acm_domain != null ? 1 : 0
-  load_balancer_arn = aws_lb.alb.arn
+  count             = var.load_balancer != null ? (var.load_balancer.tls != null ? 1 : 0) : 0
+  load_balancer_arn = aws_lb.alb[0].arn
   port              = 80
   protocol          = "HTTP"
   tags = merge({
@@ -200,8 +261,8 @@ resource "aws_lb_listener" "http" {
 
 
 resource "aws_lb_listener" "http_fwd" {
-  count             = var.acm_domain != null ? 0 : 1
-  load_balancer_arn = aws_lb.alb.arn
+  count             = var.load_balancer != null ? (var.load_balancer.tls != null ? 1 : 0) : 0
+  load_balancer_arn = aws_lb.alb[0].arn
   port              = 80
   protocol          = "HTTP"
   tags = merge({
@@ -210,7 +271,7 @@ resource "aws_lb_listener" "http_fwd" {
   }, var.aws_tags)
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.service_tg.arn
+    target_group_arn = aws_lb_target_group.service[0].arn
   }
 }
 
@@ -218,7 +279,7 @@ resource "aws_lb_listener" "http_fwd" {
 ## Task definition
 resource "aws_ecs_task_definition" "service" {
   family             = "${var.id}-${var.container.name}-service-task"
-  task_role_arn      = aws_iam_role.task_role.arn
+  task_role_arn      = aws_iam_role.task.arn
   execution_role_arn = data.aws_iam_role.task_execution_role.arn
   network_mode       = "awsvpc"
   cpu                = var.container.cpu
@@ -246,7 +307,7 @@ resource "aws_ecs_task_definition" "service" {
             for key in var.container.secret_keys :
             {
               name      = key,
-              valueFrom = "${aws_secretsmanager_secret.service_secrets.arn}:${key}::"
+              valueFrom = "${aws_secretsmanager_secret.service.arn}:${key}::"
             }
           ],
           [
@@ -268,6 +329,8 @@ resource "aws_ecs_task_definition" "service" {
             awslogs-stream-prefix = "ecs"
           }
         }
+      },
+      var.load_balancer != null ? {
         healthCheck = {
           command = [
             "CMD-SHELL",
@@ -278,7 +341,7 @@ resource "aws_ecs_task_definition" "service" {
           retries     = 3
           startPeriod = 60
         }
-      }
+      } : {}
     )
   ])
   runtime_platform {
@@ -289,7 +352,7 @@ resource "aws_ecs_task_definition" "service" {
 
 ## Service
 resource "aws_ecs_service" "service" {
-  depends_on             = [aws_iam_role.task_role]
+  depends_on             = [aws_iam_role.task]
   name                   = "${var.id}-${var.container.name}-sevice"
   cluster                = data.aws_ecs_cluster.ecs_cluster.arn
   task_definition        = aws_ecs_task_definition.service.arn
@@ -317,14 +380,17 @@ resource "aws_ecs_service" "service" {
   # Network configuration
   network_configuration {
     assign_public_ip = false
-    security_groups  = [aws_security_group.service_sg.id, data.aws_security_group.cluster.id]
+    security_groups  = [aws_security_group.service.id, data.aws_security_group.cluster.id]
     subnets          = data.aws_subnet.vpc_private_subnets[*].id
   }
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.service_tg.arn
-    container_name   = var.container.name
-    container_port   = var.container.port
+  dynamic "load_balancer" {
+    for_each = var.load_balancer != null ? [1] : []
+    content {
+      target_group_arn = aws_lb_target_group.service[0].arn
+      container_name   = var.container.name
+      container_port   = var.container.port
+    }
   }
 
   # Compute configuration
@@ -394,6 +460,8 @@ resource "aws_cloudwatch_metric_alarm" "cpu" {
   period              = 60
   statistic           = "Average"
   threshold           = var.scale_policy.cpu_target
+  alarm_actions       = [var.sns_topic]
+  ok_actions          = [var.sns_topic]
   dimensions = {
     ClusterName = data.aws_ecs_cluster.ecs_cluster.cluster_name
     ServiceName = aws_ecs_service.service.name
@@ -403,6 +471,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu" {
     TFID = var.id
   }, var.aws_tags)
 }
+
 resource "aws_cloudwatch_metric_alarm" "memory" {
   alarm_name          = "${aws_ecs_service.service.name}-memory-alarm"
   alarm_description   = "Memory usage on ECS service ${aws_ecs_service.service.name} is too high"
@@ -413,6 +482,8 @@ resource "aws_cloudwatch_metric_alarm" "memory" {
   period              = 60
   statistic           = "Average"
   threshold           = var.scale_policy.memory_target
+  alarm_actions       = [var.sns_topic]
+  ok_actions          = [var.sns_topic]
   dimensions = {
     ClusterName = data.aws_ecs_cluster.ecs_cluster.cluster_name
     ServiceName = aws_ecs_service.service.name
@@ -421,20 +492,5 @@ resource "aws_cloudwatch_metric_alarm" "memory" {
     Name = "${var.id}-${var.container.name}-sevice-memory-alarm",
     TFID = var.id
   }, var.aws_tags)
-}
-
-resource "aws_cloudwatch_composite_alarm" "service_alarm" {
-  alarm_name    = "${aws_ecs_service.service.name}-composite-alarm"
-  alarm_rule    = "ALARM(\"${aws_cloudwatch_metric_alarm.cpu.alarm_name}\") OR ALARM(\"${aws_cloudwatch_metric_alarm.memory.alarm_name}\")"
-  alarm_actions = [var.sns_topic]
-  ok_actions    = [var.sns_topic]
-  tags = merge({
-    Name = "${var.id}-${var.container.name}-sevice-alarm",
-    TFID = var.id
-  }, var.aws_tags)
-  depends_on = [
-    aws_cloudwatch_metric_alarm.cpu,
-    aws_cloudwatch_metric_alarm.memory
-  ]
 }
 

@@ -54,6 +54,25 @@ variable "task_execution_role" {
 }
 
 # ALB
+variable "load_balancer" {
+  description = "The configuration to use for the Load Balancer."
+  type = object(
+    {
+      public          = optional(bool, true)
+      security_groups = optional(list(string), [])
+      prefix_lists    = optional(list(string), [])
+      waf             = optional(bool, false)
+      tls = optional(
+        object(
+          {
+            domain = string
+          }
+        )
+      )
+    }
+  )
+}
+
 variable "acm_domain" {
   description = "The domain to use for the ACM certificate."
   type        = string
