@@ -261,7 +261,7 @@ resource "aws_lb_listener" "http" {
 
 
 resource "aws_lb_listener" "http_fwd" {
-  count             = var.load_balancer != null ? (var.load_balancer.tls != null ? 1 : 0) : 0
+  count             = var.load_balancer != null ? (var.load_balancer.tls == null ? 1 : 0) : 0
   load_balancer_arn = aws_lb.alb[0].arn
   port              = 80
   protocol          = "HTTP"
