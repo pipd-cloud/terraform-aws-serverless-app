@@ -128,6 +128,6 @@ resource "aws_secretsmanager_secret" "cluster_secrets" {
 
 resource "aws_secretsmanager_secret_version" "cluster" {
   count         = var.secrets != null ? 1 : 0
-  secret_id     = aws_secretsmanager_secret.cluster_secrets
+  secret_id     = aws_secretsmanager_secret.cluster_secrets.id
   secret_string = jsonencode(var.secrets)
 }
