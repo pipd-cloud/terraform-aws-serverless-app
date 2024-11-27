@@ -150,6 +150,15 @@ resource "aws_secretsmanager_secret" "service" {
   }, var.aws_tags)
 }
 
+resource "aws_secretsmanager_secret_version" "service" {
+  count         = var.secrets != null ? 1 : 0
+  secret_id     = aws_secretsmanager_secret.service
+  secret_string = jsonencode(var.secrets)
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 # IAM
 ## Container
 resource "aws_iam_role" "task" {
@@ -258,7 +267,6 @@ resource "aws_lb_listener" "http" {
     }
   }
 }
-
 
 resource "aws_lb_listener" "http_fwd" {
   count             = var.load_balancer != null ? (var.load_balancer.tls == null ? 1 : 0) : 0

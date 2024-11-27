@@ -40,6 +40,7 @@ module "ecs_services" {
   task_execution_role = module.ecs_cluster.task_execution_role.name
   managed_policies    = var.ecs_services[count.index].iam_managed_policies
   policy              = var.ecs_services[count.index].iam_custom_policy
+  secrets             = var.ecs_services[count.index].secrets
   sns_topic           = var.sns_topic
   vpc_id              = var.vpc_id
   vpc_public_subnets  = var.vpc_public_subnets

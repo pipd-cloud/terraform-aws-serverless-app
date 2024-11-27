@@ -113,6 +113,7 @@ variable "ecs_services" {
             scale_out_cooldown = 60
           }
         )
+        secrets = optional(map(string))
         load_balancer = optional(
           object(
             {
@@ -133,8 +134,10 @@ variable "ecs_services" {
       }
     )
   )
-  default = []
+  default   = []
+  sensitive = true
 }
+
 
 
 variable "batch" {
