@@ -293,7 +293,7 @@ resource "aws_ecs_task_definition" "service" {
     merge(
       {
         name  = var.container.name
-        image = var.container.tag != null ? data.aws_ecr_image.service_requested[0].image_uri : data.aws_ecr_image.service_latest.image_uri
+        image = data.aws_ecr_image.service.image_uri
         portMappings = [{
           containerPort = var.container.port
           hostPost      = var.container.port

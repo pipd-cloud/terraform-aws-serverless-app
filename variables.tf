@@ -56,7 +56,7 @@ variable "ecs_services" {
         container = object(
           {
             name    = string
-            tag     = optional(string)
+            digest  = string
             port    = number
             cpu     = optional(number, 2048)
             memory  = optional(number, 4096)

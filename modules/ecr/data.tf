@@ -1,37 +1,12 @@
 data "aws_ecr_lifecycle_policy_document" "task" {
   rule {
     priority    = 10
-    description = "Expire untagged images after 30 days."
-    selection {
-      tag_status   = "untagged"
-      count_type   = "sinceImagePushed"
-      count_unit   = "days"
-      count_number = 30
-    }
-    action {
-      type = "expire"
-    }
-  }
-
-  rule {
-    priority    = 20
-    description = "Expire stale images after 180 days."
+    description = "Expire stale images after 90 days."
     selection {
       tag_status   = "any"
       count_type   = "sinceImagePushed"
       count_unit   = "days"
-      count_number = 180
-    }
-  }
-
-  rule {
-    priority    = 30
-    description = "Retain only the last 100 pushed images."
-    selection {
-      tag_status       = "tagged"
-      tag_pattern_list = ["*"]
-      count_type       = "imageCountMoreThan"
-      count_number     = 100
+      count_number = 90
     }
   }
 }
