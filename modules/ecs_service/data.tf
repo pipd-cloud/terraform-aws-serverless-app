@@ -121,7 +121,11 @@ data "aws_prefix_list" "internal" {
 }
 
 # Service container image
+data "aws_ecr_repository" "service" {
+  name = var.ecr_repo
+}
+
 data "aws_ecr_image" "service" {
-  repository_name = data.aws_ecr_repository.task.name
+  repository_name = data.aws_ecr_repository.service.name
   image_digest    = var.container.digest
 }
