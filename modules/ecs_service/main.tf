@@ -292,17 +292,10 @@ resource "aws_ecs_task_definition" "service" {
   container_definitions = jsonencode([
     merge(
       {
-        name  = var.container.name
-        image = data.aws_ecr_image.service.image_uri
-        portMappings = [{
-          containerPort = var.container.port
-          hostPost      = var.container.port
-          protocol      = "tcp"
-          appProtocol   = "http"
-        }],
-      essential = true },
-      length(var.container.command) > 0 ? { command = var.container.command } : {},
-      { environment = var.container.environment
+        name        = var.container.name
+        image       = data.aws_ecr_image.service.image_uri
+        essential   = true
+        environment = var.container.environment
         secrets = concat(
           [
             for key in var.container.secret_keys :
@@ -331,6 +324,7 @@ resource "aws_ecs_task_definition" "service" {
           }
         }
       },
+      length(var.container.command) > 0 ? { command = var.container.command } : {},
       var.load_balancer != null ? {
         healthCheck = {
           command = [
@@ -341,6 +335,12 @@ resource "aws_ecs_task_definition" "service" {
           timeout     = 15
           retries     = 3
           startPeriod = 60
+          portMappings = [{
+            containerPort = var.container.port
+            hostPost      = var.container.port
+            protocol      = "tcp"
+            appProtocol   = "http"
+          }],
         }
       } : {}
     )

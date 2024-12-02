@@ -57,7 +57,7 @@ variable "ecs_services" {
           {
             name    = string
             digest  = string
-            port    = number
+            port    = optional(number)
             cpu     = optional(number, 2048)
             memory  = optional(number, 4096)
             command = optional(list(string), [])

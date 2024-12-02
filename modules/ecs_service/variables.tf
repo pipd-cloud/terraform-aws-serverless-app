@@ -113,7 +113,7 @@ variable "container" {
   type = object({
     name    = string
     digest  = string
-    port    = number
+    port    = optional(number)
     cpu     = number
     memory  = number
     command = optional(list(string))
@@ -125,6 +125,10 @@ variable "container" {
     cluster_secret_keys = optional(list(string), [])
     health_check_route  = optional(string, "/")
   })
+  validation {
+    condition     = var.load_balancer == null || (var.load_balancer != null && var.container.port != null)
+    error_message = "The container port must be specified if a load balancer is specified."
+  }
 }
 
 variable "scale_policy" {
