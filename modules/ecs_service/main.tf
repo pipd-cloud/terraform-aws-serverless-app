@@ -357,7 +357,7 @@ resource "aws_ecs_service" "service" {
   name                   = "${var.id}-${var.container.name}-sevice"
   cluster                = data.aws_ecs_cluster.ecs_cluster.arn
   task_definition        = aws_ecs_task_definition.service.arn
-  desired_count          = var.scale_policy.min_capacity
+  desired_count          = var.scale_policy != null ? var.scale_policy.min_capacity : 1
   enable_execute_command = true
 
   # Tags
@@ -408,6 +408,7 @@ resource "aws_ecs_service" "service" {
 
 ## Autoscaling
 resource "aws_appautoscaling_target" "service_asg" {
+  count              = var.scale_policy != null ? 1 : 0
   max_capacity       = var.scale_policy.max_capacity
   min_capacity       = var.scale_policy.min_capacity
   resource_id        = "service/${data.aws_ecs_cluster.ecs_cluster.cluster_name}/${aws_ecs_service.service.name}"
@@ -420,11 +421,12 @@ resource "aws_appautoscaling_target" "service_asg" {
 }
 
 resource "aws_appautoscaling_policy" "service_asg_policy" {
+  count              = var.scale_policy != null ? 1 : 0
   name               = "${var.id}-${var.container.name}-cpu-asg-policy"
   policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.service_asg.resource_id
-  scalable_dimension = aws_appautoscaling_target.service_asg.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.service_asg.service_namespace
+  resource_id        = aws_appautoscaling_target.service_asg[0].resource_id
+  scalable_dimension = aws_appautoscaling_target.service_asg[0].scalable_dimension
+  service_namespace  = aws_appautoscaling_target.service_asg[0].service_namespace
   target_tracking_scaling_policy_configuration {
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageCPUUtilization"
@@ -436,11 +438,12 @@ resource "aws_appautoscaling_policy" "service_asg_policy" {
 }
 
 resource "aws_appautoscaling_policy" "service_asg_memory_policy" {
+  count              = var.scale_policy != null ? 1 : 0
   name               = "${var.id}-${var.container.name}-memory-asg-policy"
   policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.service_asg.resource_id
-  scalable_dimension = aws_appautoscaling_target.service_asg.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.service_asg.service_namespace
+  resource_id        = aws_appautoscaling_target.service_asg[0].resource_id
+  scalable_dimension = aws_appautoscaling_target.service_asg[0].scalable_dimension
+  service_namespace  = aws_appautoscaling_target.service_asg[0].service_namespace
   target_tracking_scaling_policy_configuration {
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageMemoryUtilization"
@@ -460,7 +463,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu" {
   namespace           = "AWS/ECS"
   period              = 60
   statistic           = "Average"
-  threshold           = var.scale_policy.cpu_target
+  threshold           = var.scale_policy != null ? var.scale_policy.cpu_target : 70
   alarm_actions       = [var.sns_topic]
   ok_actions          = [var.sns_topic]
   dimensions = {
@@ -482,7 +485,7 @@ resource "aws_cloudwatch_metric_alarm" "memory" {
   namespace           = "AWS/ECS"
   period              = 60
   statistic           = "Average"
-  threshold           = var.scale_policy.memory_target
+  threshold           = var.scale_policy != null ? var.scale_policy.memory_target : 70
   alarm_actions       = [var.sns_topic]
   ok_actions          = [var.sns_topic]
   dimensions = {

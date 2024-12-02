@@ -137,6 +137,8 @@ variable "scale_policy" {
     scale_in_cooldown  = optional(number, 60)
     scale_out_cooldown = optional(number, 60)
   })
+  nullable = true
+  default  = null
 }
 
 
