@@ -211,8 +211,15 @@ variable "db_inbound_sg_ids" {
   default     = []
 }
 
-variable "db_source_snapshot" {
-  description = "The snapshot from which to create the database."
+variable "db_cluster_snapshot" {
+  description = "The cluster snapshot from which to create the database."
+  type        = string
+  nullable    = true
+  default     = null
+}
+
+variable "db_instance_snapshot" {
+  description = "The instance snapshot from which to create the database."
   type        = string
   nullable    = true
   default     = null
@@ -222,11 +229,6 @@ variable "db_engine_version" {
   description = "The version of the engine to deploy."
   type        = string
   nullable    = true
-  default     = null
-  validation {
-    condition     = var.db_source_snapshot != null || var.db_engine_version != null
-    error_message = "Either the engine version or the RDS snapshot ID must be provided"
-  }
 }
 
 variable "db_instance_count" {

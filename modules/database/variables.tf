@@ -34,8 +34,15 @@ variable "security_groups" {
   default     = []
 }
 
-variable "source_snapshot" {
-  description = "The snapshot from which to create the database."
+variable "cluster_snapshot" {
+  description = "The cluster snapshot from which to create the database."
+  type        = string
+  nullable    = true
+  default     = null
+}
+
+variable "instance_snapshot" {
+  description = "The instance snapshot from which to create the database."
   type        = string
   nullable    = true
   default     = null
@@ -57,7 +64,7 @@ variable "engine_version" {
   nullable    = true
   default     = null
   validation {
-    condition     = var.source_snapshot != null || var.engine_version != null
+    condition     = var.cluster_snapshot == null || var.instance_snapshot == null || var.engine_version != null
     error_message = "Either the engine version or the RDS snapshot ID must be provided"
   }
 }

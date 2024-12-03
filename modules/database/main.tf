@@ -136,15 +136,15 @@ resource "aws_rds_cluster" "cluster" {
   db_cluster_parameter_group_name  = aws_rds_cluster_parameter_group.cluster.name
   db_instance_parameter_group_name = aws_db_parameter_group.instance.name
   engine_version = (
-    var.source_snapshot != null ?
+    local.source_snapshot != null ?
     data.aws_db_cluster_snapshot.source[0].engine_version : var.engine_version
   )
 
   final_snapshot_identifier   = "${var.id}-rds-cluster-final-${random_id.final_snapshot_id.hex}"
-  master_username             = var.source_snapshot == null ? "root" : null
+  master_username             = local.source_snapshot == null ? "root" : null
   manage_master_user_password = true
   snapshot_identifier = (
-    var.source_snapshot == null ?
+    local.source_snapshot == null ?
     null : data.aws_db_cluster_snapshot.source[0].db_cluster_snapshot_arn
   )
   iam_database_authentication_enabled = true

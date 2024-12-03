@@ -26,12 +26,20 @@ data "aws_security_group" "inbound" {
   }
 }
 
-
 # RDS
 ## Source snapshot (Restore from snapshot)
 data "aws_db_cluster_snapshot" "source" {
-  count                          = var.source_snapshot != null ? 1 : 0
-  db_cluster_snapshot_identifier = var.source_snapshot
+  count                          = var.cluster_snapshot != null ? 1 : 0
+  db_cluster_snapshot_identifier = var.cluster_snapshot
+}
+
+data "aws_db_snapshot" "source" {
+  count                  = var.instance_snapshot != null ? 1 : 0
+  db_snapshot_identifier = var.instance_snapshot
+}
+
+locals {
+  source_snapshot = var.cluster_snapshot != null ? data.aws_db_cluster_snapshot.source[0].id : (var.instance_snapshot != null ? data.aws_db_snapshot.source[0].id : null)
 }
 
 ## RDS Proxy
