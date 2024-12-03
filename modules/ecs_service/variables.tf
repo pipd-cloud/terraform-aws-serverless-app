@@ -112,7 +112,7 @@ variable "container" {
   description = "The container definition for the main ECS task."
   type = object({
     name    = string
-    digest  = string
+    digest  = optional(string)
     port    = optional(number)
     cpu     = number
     memory  = number

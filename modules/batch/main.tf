@@ -92,13 +92,14 @@ resource "aws_batch_job_queue" "batch" {
 }
 
 resource "aws_batch_job_definition" "batch" {
-  name = "${var.id}-batch-job"
-  type = "container"
+  count = var.container.digest != null ? 1 : 0
+  name  = "${var.id}-batch-job"
+  type  = "container"
   container_properties = jsonencode(
     merge(
       length(var.container.command) > 0 ? { command = var.container.command } : {},
       {
-        image       = var.container.tag != null ? data.aws_ecr_image.task_requested[0].image_uri : data.aws_ecr_image.task_latest.image_uri
+        image       = data.aws_ecr_image.task[0].image_uri
         environment = var.container.environment
         secrets = [
           for key in var.container.cluster_secret_keys :

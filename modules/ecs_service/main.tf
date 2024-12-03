@@ -279,6 +279,7 @@ resource "aws_lb_listener" "http_fwd" {
 # ECS
 ## Task definition
 resource "aws_ecs_task_definition" "service" {
+  count              = var.container.digest != null ? 1 : 0
   family             = "${var.id}-${var.container.name}-service-task"
   task_role_arn      = aws_iam_role.task.arn
   execution_role_arn = data.aws_iam_role.task_execution_role.arn
@@ -293,7 +294,7 @@ resource "aws_ecs_task_definition" "service" {
     merge(
       {
         name        = var.container.name
-        image       = data.aws_ecr_image.service.image_uri
+        image       = data.aws_ecr_image.service[0].image_uri
         essential   = true
         environment = var.container.environment
         secrets = concat(
@@ -353,10 +354,11 @@ resource "aws_ecs_task_definition" "service" {
 
 ## Service
 resource "aws_ecs_service" "service" {
+  count                  = var.container.digest != null ? 1 : 0
   depends_on             = [aws_iam_role.task]
   name                   = "${var.id}-${var.container.name}-sevice"
   cluster                = data.aws_ecs_cluster.ecs_cluster.arn
-  task_definition        = aws_ecs_task_definition.service.arn
+  task_definition        = aws_ecs_task_definition.service[0].arn
   desired_count          = var.scale_policy != null ? var.scale_policy.min_capacity : 1
   enable_execute_command = true
 
@@ -367,11 +369,12 @@ resource "aws_ecs_service" "service" {
     Name = "${var.id}-${var.container.name}-sevice",
     TFID = var.id
   }, var.aws_tags)
+
   # ECS deployment configuration
   force_new_deployment               = true
   deployment_minimum_healthy_percent = 50
   deployment_maximum_percent         = 200
-  # wait_for_steady_state              = true
+  wait_for_steady_state              = true
 
   deployment_circuit_breaker {
     enable   = true
@@ -408,10 +411,10 @@ resource "aws_ecs_service" "service" {
 
 ## Autoscaling
 resource "aws_appautoscaling_target" "service_asg" {
-  count              = var.scale_policy != null ? 1 : 0
+  count              = var.container.digest != null ? (var.scale_policy != null ? 1 : 0) : 0
   max_capacity       = var.scale_policy.max_capacity
   min_capacity       = var.scale_policy.min_capacity
-  resource_id        = "service/${data.aws_ecs_cluster.ecs_cluster.cluster_name}/${aws_ecs_service.service.name}"
+  resource_id        = "service/${data.aws_ecs_cluster.ecs_cluster.cluster_name}/${aws_ecs_service.service[0].name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
   tags = merge({
@@ -421,7 +424,7 @@ resource "aws_appautoscaling_target" "service_asg" {
 }
 
 resource "aws_appautoscaling_policy" "service_asg_policy" {
-  count              = var.scale_policy != null ? 1 : 0
+  count              = var.container.digest != null ? (var.scale_policy != null ? 1 : 0) : 0
   name               = "${var.id}-${var.container.name}-cpu-asg-policy"
   policy_type        = "TargetTrackingScaling"
   resource_id        = aws_appautoscaling_target.service_asg[0].resource_id
@@ -438,7 +441,7 @@ resource "aws_appautoscaling_policy" "service_asg_policy" {
 }
 
 resource "aws_appautoscaling_policy" "service_asg_memory_policy" {
-  count              = var.scale_policy != null ? 1 : 0
+  count              = var.container.digest != null ? (var.scale_policy != null ? 1 : 0) : 0
   name               = "${var.id}-${var.container.name}-memory-asg-policy"
   policy_type        = "TargetTrackingScaling"
   resource_id        = aws_appautoscaling_target.service_asg[0].resource_id
@@ -455,8 +458,9 @@ resource "aws_appautoscaling_policy" "service_asg_memory_policy" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu" {
-  alarm_name          = "${aws_ecs_service.service.name}-cpu-alarm"
-  alarm_description   = "CPU usage on ECS service ${aws_ecs_service.service.name} is too high"
+  count               = var.container.digest != null ? 1 : 0
+  alarm_name          = "${aws_ecs_service.service[0].name}-cpu-alarm"
+  alarm_description   = "CPU usage on ECS service ${aws_ecs_service.service[0].name} is too high"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 3
   metric_name         = "CPUUtilization"
@@ -468,7 +472,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu" {
   ok_actions          = [var.sns_topic]
   dimensions = {
     ClusterName = data.aws_ecs_cluster.ecs_cluster.cluster_name
-    ServiceName = aws_ecs_service.service.name
+    ServiceName = aws_ecs_service.service[0].name
   }
   tags = merge({
     Name = "${var.id}-${var.container.name}-sevice-cpu-alarm",
@@ -477,8 +481,9 @@ resource "aws_cloudwatch_metric_alarm" "cpu" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "memory" {
-  alarm_name          = "${aws_ecs_service.service.name}-memory-alarm"
-  alarm_description   = "Memory usage on ECS service ${aws_ecs_service.service.name} is too high"
+  count               = var.container.digest != null ? 1 : 0
+  alarm_name          = "${aws_ecs_service.service[0].name}-memory-alarm"
+  alarm_description   = "Memory usage on ECS service ${aws_ecs_service.service[0].name} is too high"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 3
   metric_name         = "MemoryUtilization"
@@ -490,7 +495,7 @@ resource "aws_cloudwatch_metric_alarm" "memory" {
   ok_actions          = [var.sns_topic]
   dimensions = {
     ClusterName = data.aws_ecs_cluster.ecs_cluster.cluster_name
-    ServiceName = aws_ecs_service.service.name
+    ServiceName = aws_ecs_service.service[0].name
   }
   tags = merge({
     Name = "${var.id}-${var.container.name}-sevice-memory-alarm",

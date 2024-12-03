@@ -96,7 +96,7 @@ variable "container" {
   description = "The definition of the primary container within the ECS task, specifying its configuration and behavior."
   type = object({
     name    = string
-    tag     = optional(string)
+    digest  = optional(string)
     cpu     = number
     memory  = number
     command = optional(list(string))

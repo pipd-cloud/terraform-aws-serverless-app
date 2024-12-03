@@ -126,6 +126,7 @@ data "aws_ecr_repository" "service" {
 }
 
 data "aws_ecr_image" "service" {
+  count           = var.container.digest != null ? 1 : 0
   repository_name = data.aws_ecr_repository.service.name
   image_digest    = var.container.digest
 }

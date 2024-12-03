@@ -93,15 +93,10 @@ data "aws_ecr_repository" "task" {
   name = var.ecr_repo
 }
 
-data "aws_ecr_image" "task_latest" {
+data "aws_ecr_image" "task" {
+  count           = var.container.digest != null ? 1 : 0
   repository_name = data.aws_ecr_repository.task.name
-  most_recent     = true
-}
-
-data "aws_ecr_image" "task_requested" {
-  count           = var.container.tag != null ? 1 : 0
-  repository_name = data.aws_ecr_repository.task.name
-  image_tag       = var.container.tag
+  image_digest    = var.container.digest
 }
 
 data "aws_secretsmanager_secret" "cluster" {
