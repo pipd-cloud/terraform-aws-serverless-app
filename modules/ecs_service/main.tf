@@ -337,6 +337,8 @@ resource "aws_ecs_task_definition" "service" {
           retries     = 3
           startPeriod = 60
         }
+      } : {},
+      var.container.port != null ? {
         portMappings = [{
           containerPort = var.container.port
           hostPost      = var.container.port
