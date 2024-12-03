@@ -101,7 +101,7 @@ data "aws_ecs_cluster" "ecs_cluster" {
 
 # Load balancer configuration
 data "aws_acm_certificate" "alb" {
-  count       = var.load_balancer.tls != null ? 1 : 0
+  count       = var.load_balancer != null ? (var.load_balancer.tls != null ? 1 : 0) : 0
   domain      = var.load_balancer.tls.domain
   most_recent = true
 }
