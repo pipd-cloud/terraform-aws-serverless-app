@@ -336,13 +336,13 @@ resource "aws_ecs_task_definition" "service" {
           timeout     = 15
           retries     = 3
           startPeriod = 60
-          portMappings = [{
-            containerPort = var.container.port
-            hostPost      = var.container.port
-            protocol      = "tcp"
-            appProtocol   = "http"
-          }],
         }
+        portMappings = [{
+          containerPort = var.container.port
+          hostPost      = var.container.port
+          protocol      = "tcp"
+          appProtocol   = "http"
+        }],
       } : {}
     )
   ])
