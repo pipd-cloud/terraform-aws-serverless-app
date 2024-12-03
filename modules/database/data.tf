@@ -39,7 +39,6 @@ data "aws_db_snapshot" "source" {
 }
 
 locals {
-  source_snapshot = var.cluster_snapshot != null ? data.aws_db_cluster_snapshot.source[0].id : (var.instance_snapshot != null ? data.aws_db_snapshot.source[0].id : null)
 }
 
 ## RDS Proxy

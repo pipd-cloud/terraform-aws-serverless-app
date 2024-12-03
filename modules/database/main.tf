@@ -136,16 +136,20 @@ resource "aws_rds_cluster" "cluster" {
   db_cluster_parameter_group_name  = aws_rds_cluster_parameter_group.cluster.name
   db_instance_parameter_group_name = aws_db_parameter_group.instance.name
   engine_version = (
-    local.source_snapshot != null ?
-    data.aws_db_cluster_snapshot.source[0].engine_version : var.engine_version
+    var.cluster_snapshot != null ?
+    data.aws_db_cluster_snapshot.source[0].engine_version : (
+      var.instance_snapshot != null ?
+      data.aws_db_snapshot.source[0].engine_version : null
+    )
   )
-
   final_snapshot_identifier   = "${var.id}-rds-cluster-final-${random_id.final_snapshot_id.hex}"
-  master_username             = local.source_snapshot == null ? "root" : null
   manage_master_user_password = true
   snapshot_identifier = (
-    local.source_snapshot == null ?
-    null : data.aws_db_cluster_snapshot.source[0].db_cluster_snapshot_arn
+    var.cluster_snapshot != null ?
+    data.aws_db_cluster_snapshot.source[0].db_cluster_snapshot_arn : (
+      var.instance_snapshot != null ?
+      data.aws_db_snapshot.source[0].db_snapshot_arn : null
+    )
   )
   iam_database_authentication_enabled = true
   allow_major_version_upgrade         = true
@@ -163,7 +167,7 @@ resource "aws_rds_cluster" "cluster" {
   }
   lifecycle {
     create_before_destroy = true
-    ignore_changes        = [snapshot_identifier]
+    ignore_changes        = [snapshot_identifier, master_username]
   }
 }
 
