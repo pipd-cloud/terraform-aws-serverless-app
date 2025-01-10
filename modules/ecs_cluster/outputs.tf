@@ -20,5 +20,5 @@ output "cluster_secrets" {
 
 output "alb" {
   description = "The load balancer associated with the ECS cluster."
-  value       = var.load_balancer != null ? aws_lb.alb[0] : null
+  value       = aws_lb.alb
 }

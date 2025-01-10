@@ -1,49 +1,21 @@
 module "ecs_cluster" {
-  source          = "./modules/ecs_cluster"
-  id              = var.id
-  aws_tags        = var.aws_tags
-  sns_topic       = var.sns_topic
-  security_groups = var.ecs_cluster_inbound_sg_ids
-  secrets         = var.ecs_cluster_secrets
-  vpc_id          = var.vpc_id
+  source             = "./modules/ecs_cluster"
+  id                 = var.id
+  aws_tags           = var.aws_tags
+  load_balancer      = var.ecs_load_balancer
+  sns_topic          = var.sns_topic
+  security_groups    = var.ecs_cluster_inbound_sg_ids
+  secrets            = var.ecs_cluster_secrets
+  vpc_id             = var.vpc_id
+  vpc_public_subnets = var.vpc_public_subnets
 }
 
-module "ecr_service_repos" {
-  count    = length(var.ecs_services)
+module "ecr_repos" {
+  count    = length(var.ecr_repos)
   source   = "./modules/ecr"
   id       = var.id
   aws_tags = var.aws_tags
-  repo     = "${var.ecs_services[count.index].container.name}-service"
-}
-
-module "ecr_batch_repo" {
-  count    = var.batch != null ? 1 : 0
-  source   = "./modules/ecr"
-  id       = var.id
-  aws_tags = var.aws_tags
-  repo     = var.batch.container.name
-}
-
-module "ecs_services" {
-  count               = length(var.ecs_services)
-  depends_on          = [module.ecr_service_repos, module.ecs_cluster]
-  source              = "./modules/ecs_service"
-  id                  = var.id
-  aws_tags            = var.aws_tags
-  cluster_name        = module.ecs_cluster.cluster.name
-  cluster_sg          = module.ecs_cluster.cluster_sg.id
-  cluster_secrets     = module.ecs_cluster.cluster_secrets.arn
-  container           = var.ecs_services[count.index].container
-  ecr_repo            = module.ecr_service_repos[count.index].task_repo.name
-  load_balancer       = var.ecs_services[count.index].load_balancer
-  scale_policy        = var.ecs_services[count.index].scale_policy
-  task_execution_role = module.ecs_cluster.task_execution_role.name
-  managed_policies    = var.ecs_services[count.index].iam_managed_policies
-  policy              = var.ecs_services[count.index].iam_custom_policy
-  sns_topic           = var.sns_topic
-  vpc_id              = var.vpc_id
-  vpc_public_subnets  = var.vpc_public_subnets
-  vpc_private_subnets = var.vpc_private_subnets
+  repo     = var.ecr_repos[count.index]
 }
 
 
@@ -55,8 +27,6 @@ module "batch" {
   batch_compute       = var.batch.batch_compute
   cluster_sg          = module.ecs_cluster.cluster_sg.id
   cluster_secrets     = module.ecs_cluster.cluster_secrets.arn
-  container           = var.batch.container
-  ecr_repo            = module.ecr_batch_repo[0].task_repo.name
   managed_policies    = var.batch.iam_managed_policies
   policy              = var.batch.iam_custom_policy
   sns_topic           = var.sns_topic

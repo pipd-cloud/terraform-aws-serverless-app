@@ -46,15 +46,6 @@ resource "aws_iam_role_policy_attachment" "batch" {
   policy_arn = data.aws_iam_policy.batch.arn
 }
 
-resource "aws_secretsmanager_secret" "task" {
-  name_prefix = "${var.id}-${var.container.name}-task-secrets"
-  description = "Secrets used by the ${var.container.name} Batch task."
-  tags = merge({
-    Name = "${var.id}-${var.container.name}-task-secrets",
-    TFID = var.id
-  }, var.aws_tags)
-}
-
 resource "aws_batch_compute_environment" "batch" {
   compute_environment_name = "${var.id}-batch-compute-environment"
   service_role             = aws_iam_role.batch.arn

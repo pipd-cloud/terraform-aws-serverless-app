@@ -37,7 +37,11 @@ variable "secrets" {
   sensitive   = true
 }
 
-# ALB
+variable "vpc_public_subnets" {
+  description = "The IDs of the public subnets in the VPC."
+  type        = list(string)
+}
+
 variable "load_balancer" {
   description = "The configuration to use for the Load Balancer."
   type = object(

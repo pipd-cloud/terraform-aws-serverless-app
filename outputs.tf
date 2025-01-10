@@ -1,6 +1,6 @@
-output "load_balancers" {
-  description = "Load balancers for the services."
-  value       = module.ecs_services[*].alb
+output "load_balancer" {
+  description = "Load balancer for the cluster."
+  value       = module.ecs_cluster.alb
 }
 
 output "aurora_cluster" {

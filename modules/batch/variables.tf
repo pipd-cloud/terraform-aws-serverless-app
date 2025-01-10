@@ -85,9 +85,3 @@ variable "policy" {
     })), [])
   }))
 }
-
-# Container Definition
-variable "ecr_repo" {
-  description = "The ECR repo in which the service task images are stored."
-  type        = string
-}
