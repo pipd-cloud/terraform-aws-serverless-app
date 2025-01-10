@@ -17,3 +17,8 @@ output "cluster_secrets" {
   description = "The cluster secrets."
   value       = aws_secretsmanager_secret.cluster_secrets
 }
+
+output "alb" {
+  description = "The load balancer associated with the ECS cluster."
+  value       = var.load_balancer != null ? aws_lb.alb[0] : null
+}

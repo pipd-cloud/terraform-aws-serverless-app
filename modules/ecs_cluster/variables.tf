@@ -36,3 +36,17 @@ variable "secrets" {
   default     = null
   sensitive   = true
 }
+
+# ALB
+variable "load_balancer" {
+  description = "The configuration to use for the Load Balancer."
+  type = object(
+    {
+      public          = optional(bool, true)
+      security_groups = optional(list(string), [])
+      prefix_lists    = optional(list(string), [])
+      waf             = optional(bool, false)
+    }
+  )
+}
+

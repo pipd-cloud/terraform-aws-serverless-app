@@ -99,34 +99,13 @@ data "aws_ecs_cluster" "ecs_cluster" {
   cluster_name = var.cluster_name
 }
 
-# Load balancer configuration
-data "aws_acm_certificate" "alb" {
-  count       = var.load_balancer != null ? (var.load_balancer.tls != null ? 1 : 0) : 0
-  domain      = var.load_balancer.tls.domain
-  most_recent = true
-}
-
-data "aws_security_group" "internal" {
-  count = var.load_balancer != null ? length(var.load_balancer.security_groups) : 0
-  id    = var.load_balancer.security_groups[count.index]
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.vpc.id]
-  }
-}
-
-data "aws_prefix_list" "internal" {
-  count          = var.load_balancer != null ? length(var.load_balancer.prefix_lists) : 0
-  prefix_list_id = var.load_balancer.prefix_lists[count.index]
-}
-
 # Service container image
 data "aws_ecr_repository" "service" {
   name = var.ecr_repo
 }
 
-data "aws_ecr_image" "service" {
-  count           = var.container.digest != null ? 1 : 0
-  repository_name = data.aws_ecr_repository.service.name
-  image_digest    = var.container.digest
+data "aws_acm_certificate" "service" {
+  count       = var.acm_domain != null ? 1 : 0
+  domain      = var.acm_domain
+  most_recent = true
 }

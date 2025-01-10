@@ -118,3 +118,20 @@ data "aws_security_group" "inbound" {
     values = [data.aws_vpc.vpc.id]
   }
 }
+# Load balancer configuration
+
+
+data "aws_security_group" "internal" {
+  count = var.load_balancer != null ? length(var.load_balancer.security_groups) : 0
+  id    = var.load_balancer.security_groups[count.index]
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.vpc.id]
+  }
+}
+
+data "aws_prefix_list" "internal" {
+  count          = var.load_balancer != null ? length(var.load_balancer.prefix_lists) : 0
+  prefix_list_id = var.load_balancer.prefix_lists[count.index]
+}
+

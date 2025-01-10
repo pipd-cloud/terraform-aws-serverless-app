@@ -53,33 +53,6 @@ variable "task_execution_role" {
   type        = string
 }
 
-# ALB
-variable "load_balancer" {
-  description = "The configuration to use for the Load Balancer."
-  type = object(
-    {
-      public          = optional(bool, true)
-      security_groups = optional(list(string), [])
-      prefix_lists    = optional(list(string), [])
-      waf             = optional(bool, false)
-      tls = optional(
-        object(
-          {
-            domain = string
-          }
-        )
-      )
-    }
-  )
-}
-
-variable "acm_domain" {
-  description = "The domain to use for the ACM certificate."
-  type        = string
-  nullable    = true
-  default     = null
-}
-
 # IAM
 variable "managed_policies" {
   description = "List of managed policies that are associated with running tasks."
@@ -108,28 +81,6 @@ variable "ecr_repo" {
   type        = string
 }
 
-variable "container" {
-  description = "The container definition for the main ECS task."
-  type = object({
-    name    = string
-    digest  = optional(string)
-    port    = optional(number)
-    cpu     = number
-    memory  = number
-    command = optional(list(string))
-    environment = list(object({
-      name  = string
-      value = string
-    }))
-    secret_keys         = optional(list(string), [])
-    cluster_secret_keys = optional(list(string), [])
-    health_check_route  = optional(string, "/")
-  })
-  validation {
-    condition     = var.load_balancer == null || (var.load_balancer != null && var.container.port != null)
-    error_message = "The container port must be specified if a load balancer is specified."
-  }
-}
 
 variable "scale_policy" {
   description = "The scaling policy for the ECS service."
@@ -145,4 +96,10 @@ variable "scale_policy" {
   default  = null
 }
 
+variable "acm_domain" {
+  description = "The domain to use for the ACM certificate."
+  type        = string
+  nullable    = true
+  default     = null
+}
 
