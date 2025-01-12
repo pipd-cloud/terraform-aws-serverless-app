@@ -143,6 +143,8 @@ data "aws_prefix_list" "internal" {
 }
 
 data "aws_acm_certificate" "alb" {
-  count  = var.load_balancer.domain != null ? 1 : 0
-  domain = var.load_balancer.domain
+  count       = var.load_balancer.domain != null ? 1 : 0
+  domain      = var.load_balancer.domain
+  statuses    = ["ISSUED"]
+  most_recent = true
 }
