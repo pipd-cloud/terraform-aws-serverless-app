@@ -36,3 +36,22 @@ variable "secrets" {
   default     = null
   sensitive   = true
 }
+
+variable "vpc_public_subnets" {
+  description = "The IDs of the public subnets in the VPC."
+  type        = list(string)
+}
+
+variable "load_balancer" {
+  description = "The configuration to use for the Load Balancer."
+  type = object(
+    {
+      public          = optional(bool, true)
+      security_groups = optional(list(string), [])
+      prefix_lists    = optional(list(string), [])
+      waf             = optional(bool, false)
+    }
+  )
+  default = {}
+}
+

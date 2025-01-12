@@ -131,3 +131,120 @@ resource "aws_secretsmanager_secret_version" "cluster" {
   secret_id     = aws_secretsmanager_secret.cluster_secrets.id
   secret_string = jsonencode(var.secrets)
 }
+
+## Load Balancer
+resource "aws_security_group" "alb" {
+  description = "The ECS cluster application load balancer security group."
+  name        = "${var.id}-ecs-cluster-alb-sg"
+  vpc_id      = var.vpc_id
+  tags = merge({
+    Name = "${var.id}-ecs-cluster-alb-sg",
+    TFID = var.id
+  }, var.aws_tags)
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alb_https_public" {
+  count             = var.load_balancer.public ? 1 : 0
+  security_group_id = aws_security_group.alb.id
+  description       = "Allow all HTTPS traffic from public sources."
+  from_port         = 443
+  to_port           = 443
+  ip_protocol       = "tcp"
+  cidr_ipv4         = "0.0.0.0/0"
+  tags = merge({
+    Name = "${var.id}-ecs-cluster-alb-https-public",
+    TFID = var.id
+  }, var.aws_tags)
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alb_https_sg" {
+  count                        = length(data.aws_security_group.internal)
+  security_group_id            = aws_security_group.alb.id
+  description                  = "Allow all HTTPS traffic from internal sources."
+  from_port                    = 443
+  to_port                      = 443
+  ip_protocol                  = "tcp"
+  referenced_security_group_id = data.aws_security_group.internal[count.index].id
+  tags = merge({
+    Name = "${var.id}-ecs-cluster-alb-https-internal-${data.aws_security_group.internal[count.index].id}",
+    TFID = var.id
+  }, var.aws_tags)
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alb_https_pl" {
+  count             = length(data.aws_prefix_list.internal)
+  security_group_id = aws_security_group.alb.id
+  description       = "Allow all HTTPS traffic from predefined IP ranges."
+  from_port         = 443
+  to_port           = 443
+  ip_protocol       = "tcp"
+  prefix_list_id    = data.aws_prefix_list.internal[count.index].id
+  tags = merge({
+    Name = "${var.id}-ecs-cluster-alb-https-${data.aws_security_group.internal[count.index].id}",
+    TFID = var.id
+  }, var.aws_tags)
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alb_http_public" {
+  count             = var.load_balancer.public ? 1 : 0
+  security_group_id = aws_security_group.alb.id
+  description       = "Allow all HTTP traffic from public sources."
+  from_port         = 80
+  to_port           = 80
+  ip_protocol       = "tcp"
+  cidr_ipv4         = "0.0.0.0/0"
+  tags = merge({
+    Name = "${var.id}-ecs-cluster-alb-sg-http-public",
+    TFID = var.id
+  }, var.aws_tags)
+}
+resource "aws_vpc_security_group_ingress_rule" "alb_http_sg" {
+  count                        = length(data.aws_security_group.internal)
+  security_group_id            = aws_security_group.alb.id
+  description                  = "Allow all HTTP traffic from internal sources."
+  from_port                    = 80
+  to_port                      = 80
+  ip_protocol                  = "tcp"
+  referenced_security_group_id = data.aws_security_group.internal[count.index].id
+  tags = merge({
+    name = "${var.id}-ecs-cluster-alb-http-internal-${data.aws_security_group.internal[count.index].id}",
+    TFID = var.id
+  }, var.aws_tags)
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alb_http_pl" {
+  count             = length(data.aws_security_group.internal)
+  security_group_id = aws_security_group.alb.id
+  description       = "Allow all HTTP traffic from predefined IP ranges."
+  from_port         = 80
+  to_port           = 80
+  ip_protocol       = "tcp"
+  prefix_list_id    = data.aws_prefix_list.internal[count.index].id
+  tags = merge({
+    name = "${var.id}-ecs-cluster-alb-http-${data.aws_prefix_list.internal[count.index].id}",
+    TFID = var.id
+  }, var.aws_tags)
+}
+
+resource "aws_vpc_security_group_egress_rule" "alb_all" {
+  security_group_id = aws_security_group.alb.id
+  description       = "Allow all outbound traffic."
+  ip_protocol       = -1
+  cidr_ipv4         = "0.0.0.0/0"
+  tags = merge({
+    Name = "${var.id}-ecs-cluster-alb-all",
+    TFID = var.id
+  }, var.aws_tags)
+}
+
+resource "aws_lb" "alb" {
+  name               = "${var.id}-ecs-cluster-alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.alb.id]
+  subnets            = data.aws_subnet.vpc_public_subnets[*].id
+  tags = merge({
+    Name = "${var.id}-ecs-cluster-alb",
+    TFID = var.id
+  }, var.aws_tags)
+}

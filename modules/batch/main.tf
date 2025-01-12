@@ -46,15 +46,6 @@ resource "aws_iam_role_policy_attachment" "batch" {
   policy_arn = data.aws_iam_policy.batch.arn
 }
 
-resource "aws_secretsmanager_secret" "task" {
-  name_prefix = "${var.id}-${var.container.name}-task-secrets"
-  description = "Secrets used by the ${var.container.name} Batch task."
-  tags = merge({
-    Name = "${var.id}-${var.container.name}-task-secrets",
-    TFID = var.id
-  }, var.aws_tags)
-}
-
 resource "aws_batch_compute_environment" "batch" {
   compute_environment_name = "${var.id}-batch-compute-environment"
   service_role             = aws_iam_role.batch.arn
@@ -68,7 +59,7 @@ resource "aws_batch_compute_environment" "batch" {
   compute_resources {
     max_vcpus          = var.batch_compute.max_vcpus
     type               = var.batch_compute.type
-    subnets            = keys(data.aws_subnet.private)
+    subnets            = data.aws_subnet.private[*].id
     security_group_ids = [data.aws_security_group.cluster.id]
     tags               = var.aws_tags
   }
@@ -89,60 +80,4 @@ resource "aws_batch_job_queue" "batch" {
     order               = 1
     compute_environment = aws_batch_compute_environment.batch
   }
-}
-
-resource "aws_batch_job_definition" "batch" {
-  count = var.container.digest != null ? 1 : 0
-  name  = "${var.id}-batch-job"
-  type  = "container"
-  container_properties = jsonencode(
-    merge(
-      length(var.container.command) > 0 ? { command = var.container.command } : {},
-      {
-        image       = data.aws_ecr_image.task[0].image_uri
-        environment = var.container.environment
-        secrets = [
-          for key in var.container.cluster_secret_keys :
-          {
-            name      = key,
-            valueFrom = "${data.aws_secretsmanager_secret.cluster.arn}:${key}::"
-          }
-        ]
-        resourceRequirements = [
-          {
-            type  = "VCPU"
-            value = var.container.cpu
-          },
-          {
-            type  = "MEMORY"
-            value = tostring(var.container.memory * 1024)
-          }
-        ]
-        executionRoleArn = data.aws_iam_role.task_execution.arn
-        jobRoleArn       = aws_iam_role.task.arn
-        logConfiguration = {
-          logDriver = "awslogs",
-          options = {
-            awslogs-group         = "batch/${var.id}/container/${var.container.name}",
-            mode                  = "non-blocking",
-            awslogs-create-group  = "true",
-            max-buffer-size       = "25m",
-            awslogs-region        = data.aws_region.current.name,
-            awslogs-stream-prefix = "ecs"
-          }
-        }
-      }
-    )
-  )
-  platform_capabilities = ["FARGATE"]
-  propagate_tags        = true
-  retry_strategy {
-    attempts = var.container.attempts
-  }
-  tags = merge(
-    {
-      Name = "${var.id}-batch-job-queue"
-      TFID = var.id
-    },
-  var.aws_tags)
 }

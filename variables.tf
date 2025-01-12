@@ -47,125 +47,22 @@ variable "ecs_cluster_secrets" {
   sensitive   = true
 }
 
-
-variable "ecs_services" {
-  description = "The list of ECS services to create."
-  type = list(
-    object(
-      {
-        container = object(
-          {
-            name    = string
-            digest  = optional(string)
-            port    = optional(number)
-            cpu     = optional(number, 2048)
-            memory  = optional(number, 4096)
-            command = optional(list(string), [])
-            environment = optional(
-              list(
-                object(
-                  {
-                    name  = string
-                    value = string
-                  }
-                )
-              ),
-              []
-            )
-            secret_keys         = optional(list(string), [])
-            cluster_secret_keys = optional(list(string), [])
-            health_check_route  = optional(string, "/")
-          }
-        )
-        iam_custom_policy = optional(
-          list(
-            object(
-              {
-                sid       = string
-                effect    = string
-                actions   = list(string)
-                resources = list(string)
-                conditions = optional(
-                  list(
-                    object(
-                      {
-                        test     = string
-                        variable = string
-                        values   = list(string)
-                      }
-                    )
-                  ),
-                  []
-                )
-              }
-            )
-          ),
-          []
-        )
-        iam_managed_policies = optional(list(string), [])
-        scale_policy = optional(
-          object(
-            {
-              min_capacity       = number
-              max_capacity       = number
-              cpu_target         = number
-              scale_in_cooldown  = number
-              scale_out_cooldown = number
-            }
-          )
-        )
-        load_balancer = optional(
-          object(
-            {
-              public          = optional(bool, true)
-              security_groups = optional(list(string), [])
-              prefix_lists    = optional(list(string), [])
-              waf             = optional(bool, false)
-              tls = optional(
-                object(
-                  {
-                    domain = string
-                  }
-                )
-              )
-            }
-          )
-        )
-      }
-    )
+variable "ecs_load_balancer" {
+  description = "The configuration to use for the Load Balancer."
+  type = object(
+    {
+      public          = optional(bool, true)
+      security_groups = optional(list(string), [])
+      prefix_lists    = optional(list(string), [])
+      waf             = optional(bool, false)
+    }
   )
-  default = []
 }
-
-
 
 variable "batch" {
   description = "The AWS Batch configuration to apply, if any."
-  nullable    = true
-  default     = null
   type = object(
     {
-      container = object(
-        {
-          name    = optional(string, "batch")
-          digest  = optional(string)
-          cpu     = optional(number, 1)
-          memory  = optional(number, 2048)
-          command = optional(list(string), [])
-          environment = optional(list(
-            object(
-              {
-                name  = string
-                value = string
-              }
-            )
-            ),
-            []
-          )
-          secret_keys         = optional(list(string), [])
-          cluster_secret_keys = optional(list(string), [])
-        }
-      )
       iam_custom_policy = optional(
         list(
           object(
@@ -203,7 +100,9 @@ variable "batch" {
       )
     }
   )
+  default = {}
 }
+
 ## Database
 variable "db_inbound_sg_ids" {
   description = "The list of security groups that may access the database."

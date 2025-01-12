@@ -89,16 +89,6 @@ data "aws_iam_policy_document" "task" {
   }
 }
 
-data "aws_ecr_repository" "task" {
-  name = var.ecr_repo
-}
-
-data "aws_ecr_image" "task" {
-  count           = var.container.digest != null ? 1 : 0
-  repository_name = data.aws_ecr_repository.task.name
-  image_digest    = var.container.digest
-}
-
 data "aws_secretsmanager_secret" "cluster" {
   arn = var.cluster_secrets
 }

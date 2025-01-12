@@ -85,27 +85,3 @@ variable "policy" {
     })), [])
   }))
 }
-
-# Container Definition
-variable "ecr_repo" {
-  description = "The ECR repo in which the service task images are stored."
-  type        = string
-}
-
-variable "container" {
-  description = "The definition of the primary container within the ECS task, specifying its configuration and behavior."
-  type = object({
-    name    = string
-    digest  = optional(string)
-    cpu     = number
-    memory  = number
-    command = optional(list(string))
-    environment = list(object({
-      name  = string
-      value = string
-    }))
-    secret_keys         = optional(list(string), [])
-    cluster_secret_keys = optional(list(string), [])
-    attempts            = optional(number, 2)
-  })
-}
