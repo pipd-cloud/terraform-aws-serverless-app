@@ -78,6 +78,6 @@ resource "aws_batch_job_queue" "batch" {
   var.aws_tags)
   compute_environment_order {
     order               = 1
-    compute_environment = aws_batch_compute_environment.batch
+    compute_environment = aws_batch_compute_environment.batch.arn
   }
 }
