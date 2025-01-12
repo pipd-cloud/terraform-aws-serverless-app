@@ -61,7 +61,6 @@ resource "aws_batch_compute_environment" "batch" {
     type               = var.batch_compute.type
     subnets            = data.aws_subnet.private[*].id
     security_group_ids = [data.aws_security_group.cluster.id]
-    tags               = var.aws_tags
   }
   depends_on = [aws_iam_role_policy_attachment.batch]
 }
