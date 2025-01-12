@@ -250,10 +250,7 @@ resource "aws_lb" "alb" {
 }
 
 resource "aws_lb_listener" "https" {
-  count = var.load_balancer.domain != null ? 1 : 0
-  lifecycle {
-    replace_triggered_by = [aws_lb_target_group.service]
-  }
+  count             = var.load_balancer.domain != null ? 1 : 0
   load_balancer_arn = aws_lb.alb.arn
   certificate_arn   = data.aws_acm_certificate.alb[0].arn
   port              = 443
