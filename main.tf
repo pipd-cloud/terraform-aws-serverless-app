@@ -11,16 +11,14 @@ module "ecs_cluster" {
 }
 
 module "ecr_repos" {
-  count    = length(var.ecr_repos)
   source   = "./modules/ecr"
   id       = var.id
   aws_tags = var.aws_tags
-  repo     = var.ecr_repos[count.index]
+  repo     = "${var.id}-repo"
 }
 
 
 module "batch" {
-  count               = var.batch != null ? 1 : 0
   source              = "./modules/batch"
   id                  = var.id
   aws_tags            = var.aws_tags

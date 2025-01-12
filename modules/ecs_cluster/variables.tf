@@ -52,5 +52,6 @@ variable "load_balancer" {
       waf             = optional(bool, false)
     }
   )
+  default = {}
 }
 

@@ -59,39 +59,10 @@ variable "ecs_load_balancer" {
   )
 }
 
-variable "ecr_repos" {
-  description = "A list of ECR repositories to create. (Includes buildcache)."
-  default     = []
-  type        = list(string)
-}
-
 variable "batch" {
   description = "The AWS Batch configuration to apply, if any."
-  nullable    = true
-  default     = null
   type = object(
     {
-      container = object(
-        {
-          name    = optional(string, "batch")
-          digest  = optional(string)
-          cpu     = optional(number, 1)
-          memory  = optional(number, 2048)
-          command = optional(list(string), [])
-          environment = optional(list(
-            object(
-              {
-                name  = string
-                value = string
-              }
-            )
-            ),
-            []
-          )
-          secret_keys         = optional(list(string), [])
-          cluster_secret_keys = optional(list(string), [])
-        }
-      )
       iam_custom_policy = optional(
         list(
           object(
@@ -129,7 +100,9 @@ variable "batch" {
       )
     }
   )
+  default = {}
 }
+
 ## Database
 variable "db_inbound_sg_ids" {
   description = "The list of security groups that may access the database."
