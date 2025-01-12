@@ -25,7 +25,7 @@ output "alb" {
 
 output "alb_https_listener" {
   description = "The cluster load balancer listener for HTTPS."
-  value = var.load_balancer.public ? aws_lb_listener.https[0] : null
+  value = var.load_balancer.domain != null ? aws_lb_listener.https[0] : null
 }
 
 output "alb_http_listener" {
