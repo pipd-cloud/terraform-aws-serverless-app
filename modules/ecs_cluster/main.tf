@@ -263,7 +263,7 @@ resource "aws_lb_listener" "https" {
     type = "fixed-response"
     fixed_response {
       content_type = "text/plain"
-      message_body = "Not found"
+      message_body = "Not Found"
       status_code  = 404
     }
   }
@@ -300,8 +300,8 @@ resource "aws_lb_listener" "http_fwd" {
   default_action {
     type = "fixed-response"
     fixed_response {
-      content_type = "text/plain"
-      message_body = "Successfully connected to the ${var.id} ECS cluster load balancer over HTTP, however, no services have been configured yet."
+      content_type = "text/text"
+      message_body = "Not Found"
       status_code  = 404
     }
   }

@@ -1,8 +1,3 @@
-output "load_balancer" {
-  description = "Load balancer for the cluster."
-  value       = module.ecs_cluster.alb
-}
-
 output "aurora_cluster" {
   description = "The RDS Aurora database."
   value       = module.database.aurora_cluster
@@ -41,6 +36,21 @@ output "ecs_cluster_secrets" {
 output "ecs_cluster_task_execution_role" {
   description = "The ECS cluster task execution role."
   value       = module.ecs_cluster.task_execution_role
+}
+
+output "ecs_cluster_load_balancer" {
+  description = "Load balancer for the cluster."
+  value       = module.ecs_cluster.alb
+}
+
+output "ecs_cluster_https_listener" {
+  description = "The HTTPS listener for the cluster load balancer."
+  value       = module.ecs_cluster.alb_https_listener
+}
+
+output "ecs_cluster_http_listener" {
+  description = "The HTTP listener for the cluster load balancer."
+  value       = module.ecs_cluster.alb_http_listener
 }
 
 output "batch_task_role" {
