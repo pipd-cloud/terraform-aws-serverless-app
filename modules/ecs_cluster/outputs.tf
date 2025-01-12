@@ -22,3 +22,13 @@ output "alb" {
   description = "The load balancer associated with the ECS cluster."
   value       = aws_lb.alb
 }
+
+output "alb_https_listener" {
+  description = "The cluster load balancer listener for HTTPS."
+  value = var.load_balancer.public ? aws_lb_listener.https[0] : null
+}
+
+output "alb_http_listener" {
+  description = "The cluster load balancer listener for HTTP."
+  value = var.load_balancer.domain ? aws_lb_listener.http[0] : aws_lb_listener.http_fwd[0]
+}

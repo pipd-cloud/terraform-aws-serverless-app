@@ -129,7 +129,7 @@ data "aws_subnet" "vpc_public_subnets" {
 }
 # Load balancer configuration
 data "aws_security_group" "internal" {
-  count = var.load_balancer != null ? length(var.load_balancer.security_groups) : 0
+  count = length(var.load_balancer.security_groups)
   id    = var.load_balancer.security_groups[count.index]
   filter {
     name   = "vpc-id"
@@ -138,7 +138,11 @@ data "aws_security_group" "internal" {
 }
 
 data "aws_prefix_list" "internal" {
-  count          = var.load_balancer != null ? length(var.load_balancer.prefix_lists) : 0
+  count          = length(var.load_balancer.prefix_lists)
   prefix_list_id = var.load_balancer.prefix_lists[count.index]
 }
 
+data "aws_acm_certificate" "alb" {
+  count  = var.load_balancer.domain ? 1 : 0
+  domain = var.load_balancer.domain
+}

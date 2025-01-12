@@ -51,6 +51,7 @@ variable "ecs_load_balancer" {
   description = "The configuration to use for the Load Balancer."
   type = object(
     {
+      domain          = optional(string)
       public          = optional(bool, true)
       security_groups = optional(list(string), [])
       prefix_lists    = optional(list(string), [])
@@ -58,6 +59,7 @@ variable "ecs_load_balancer" {
     }
   )
 }
+
 
 variable "batch" {
   description = "The AWS Batch configuration to apply, if any."

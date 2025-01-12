@@ -17,7 +17,6 @@ module "ecr_repos" {
   repo     = "${var.id}-repo"
 }
 
-
 module "batch" {
   source              = "./modules/batch"
   id                  = var.id

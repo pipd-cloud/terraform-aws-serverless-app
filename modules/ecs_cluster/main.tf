@@ -144,7 +144,7 @@ resource "aws_security_group" "alb" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "alb_https_public" {
-  count             = var.load_balancer.public ? 1 : 0
+  count             = var.load_balancer.public && var.load_balancer.domain ? 1 : 0
   security_group_id = aws_security_group.alb.id
   description       = "Allow all HTTPS traffic from public sources."
   from_port         = 443
@@ -158,7 +158,7 @@ resource "aws_vpc_security_group_ingress_rule" "alb_https_public" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "alb_https_sg" {
-  count                        = length(data.aws_security_group.internal)
+  count                        = var.load_balancer.domain ? length(data.aws_security_group.internal) : 0
   security_group_id            = aws_security_group.alb.id
   description                  = "Allow all HTTPS traffic from internal sources."
   from_port                    = 443
@@ -172,7 +172,7 @@ resource "aws_vpc_security_group_ingress_rule" "alb_https_sg" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "alb_https_pl" {
-  count             = length(data.aws_prefix_list.internal)
+  count             = var.load_balancer.domain ? length(data.aws_prefix_list.internal) : 0
   security_group_id = aws_security_group.alb.id
   description       = "Allow all HTTPS traffic from predefined IP ranges."
   from_port         = 443
@@ -247,4 +247,65 @@ resource "aws_lb" "alb" {
     Name = "${var.id}-ecs-cluster-alb",
     TFID = var.id
   }, var.aws_tags)
+}
+
+resource "aws_lb_listener" "https" {
+  count = var.load_balancer.domain ? 1 : 0
+  lifecycle {
+    replace_triggered_by = [aws_lb_target_group.service]
+  }
+  load_balancer_arn = aws_lb.alb.arn
+  certificate_arn   = data.aws_acm_certificate.alb[0].arn
+  port              = 443
+  protocol          = "HTTPS"
+  tags = merge({
+    Name = "${var.id}-ecs-cluster-alb-https",
+    TFID = var.id
+  }, var.aws_tags)
+  default_action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Successfully connected to the ${var.id} ECS cluster load balancer over HTTPS, however, no services have been configured yet."
+      status_code  = 200
+    }
+  }
+}
+
+resource "aws_lb_listener" "http" {
+  count             = var.load_balancer.domain ? 1 : 0
+  load_balancer_arn = aws_lb.alb.arn
+  port              = 80
+  protocol          = "HTTP"
+  tags = merge({
+    Name = "${var.id}-ecs-cluster-alb-http",
+    TFID = var.id
+  }, var.aws_tags)
+  default_action {
+    type = "redirect"
+    redirect {
+      port        = 443
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+}
+
+resource "aws_lb_listener" "http_fwd" {
+  count             = var.load_balancer ? 0 : 1
+  load_balancer_arn = aws_lb.alb.arn
+  port              = 80
+  protocol          = "HTTP"
+  tags = merge({
+    Name = "${var.id}-ecs-cluster-alb-http",
+    TFID = var.id
+  }, var.aws_tags)
+  default_action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Successfully connected to the ${var.id} ECS cluster load balancer over HTTP, however, no services have been configured yet."
+      status_code  = 200
+    }
+  }
 }
