@@ -32,3 +32,8 @@ output "alb_http_listener" {
   description = "The cluster load balancer listener for HTTP."
   value       = var.load_balancer.domain != null ? aws_lb_listener.http[0] : aws_lb_listener.http_fwd[0]
 }
+
+output "alb_sg" {
+  description = "The cluster load balancer SG."
+  value       = aws_security_group.alb
+}

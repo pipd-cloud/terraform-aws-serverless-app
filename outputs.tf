@@ -53,6 +53,11 @@ output "ecs_cluster_http_listener" {
   value       = module.ecs_cluster.alb_http_listener
 }
 
+output "ecs_cluster_load_balancer_sg" {
+  description = "Cluster load balancer security group."
+  value       = module.ecs_cluster.alb_sg
+}
+
 output "batch_task_role" {
   description = "The IAM role for Batch tasks."
   value       = module.batch.task_role
