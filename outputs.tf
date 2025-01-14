@@ -10,7 +10,7 @@ output "redis_cluster" {
 
 output "ecr_task_repo" {
   description = "The ECR repository for tasks."
-  value       = module.ecr_repos.task_repo
+  value       = module.ecr_repo.repo
 }
 
 output "ecs_cluster" {
