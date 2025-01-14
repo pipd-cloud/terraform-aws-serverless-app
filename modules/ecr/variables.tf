@@ -14,7 +14,26 @@ variable "aws_tags" {
 
 # Module Variables
 # Required
-variable "repo" {
+variable "repo_name" {
   description = "The name of the ECR repository to create."
   type        = string
+}
+
+# Optional
+variable "buildcache_tag_prefix" {
+  description = "The prefix for build cache images."
+  type        = string
+  default     = "buildcache-"
+}
+
+variable "buildcache_expiry_days" {
+  description = "The number of days to keep build cache images."
+  type        = number
+  default     = 7
+}
+
+variable "task_expiry_days" {
+  description = "The number of days to keep task images."
+  type        = number
+  default     = 90
 }

@@ -13,11 +13,6 @@ output "ecr_task_repo" {
   value       = module.ecr_repos.task_repo
 }
 
-output "ecr_buildcache_repo" {
-  description = "The ECR repository for caching."
-  value       = module.ecr_repos.buildcache_repo
-}
-
 output "ecs_cluster" {
   description = "The ECS cluster."
   value       = module.ecs_cluster.cluster
