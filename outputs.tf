@@ -8,7 +8,7 @@ output "redis_cluster" {
   value       = module.cache.redis_cluster
 }
 
-output "ecr_task_repo" {
+output "ecr_repo" {
   description = "The ECR repository for tasks."
   value       = module.ecr_repo.repo
 }
