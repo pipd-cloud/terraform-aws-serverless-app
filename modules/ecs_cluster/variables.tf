@@ -32,8 +32,7 @@ variable "vpc_id" {
 variable "secrets" {
   description = "A set of secrets to store on Secrets Manager for this cluster."
   type        = map(string)
-  nullable    = true
-  default     = null
+  default     = {}
   sensitive   = true
 }
 

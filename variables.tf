@@ -42,8 +42,7 @@ variable "ecs_cluster_inbound_sg_ids" {
 variable "ecs_cluster_secrets" {
   description = "A set of secrets to store on Secrets Manager for the ECS cluster."
   type        = map(string)
-  nullable    = true
-  default     = null
+  default     = {}
   sensitive   = true
 }
 
