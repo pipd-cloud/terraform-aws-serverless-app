@@ -20,6 +20,12 @@ variable "repo_name" {
 }
 
 # Optional
+variable "image_tag_mutability" {
+  description = "The image tag mutability setting for the repository."
+  type        = string
+  default     = "MUTABLE"
+}
+
 variable "buildcache_tag_prefix" {
   description = "The prefix for build cache images."
   type        = string

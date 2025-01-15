@@ -65,6 +65,12 @@ variable "ecr_repo_name" {
   type        = string
 }
 
+variable "ecr_image_tag_mutability" {
+  description = "The image tag mutability setting for the repository."
+  type        = string
+  default     = "MUTABLE"
+}
+
 variable "ecr_buildcache_tag_prefix" {
   description = "The prefix for build cache images."
   type        = string

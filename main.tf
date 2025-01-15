@@ -17,6 +17,7 @@ module "ecr_repo" {
   repo_name              = var.ecr_repo_name
   buildcache_expiry_days = var.ecr_buildcache_expiry_days
   buildcache_tag_prefix  = var.ecr_buildcache_tag_prefix
+  image_tag_mutability   = var.ecr_image_tag_mutability
   task_expiry_days       = var.ecr_task_expiry_days
 }
 
