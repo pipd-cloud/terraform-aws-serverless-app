@@ -126,7 +126,7 @@ resource "aws_secretsmanager_secret" "cluster_secrets" {
   }, var.aws_tags)
 }
 
-ephemeral "aws_secretsmanager_secret_version" "cluster" {
+resource "aws_secretsmanager_secret_version" "cluster" {
   secret_id     = aws_secretsmanager_secret.cluster_secrets.id
   secret_string = jsonencode(var.secrets)
 }
