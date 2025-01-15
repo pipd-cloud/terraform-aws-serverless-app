@@ -35,6 +35,16 @@ data "aws_iam_policy_document" "batch" {
 
     actions = ["sts:AssumeRole"]
   }
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
 }
 
 data "aws_iam_policy" "batch" {
