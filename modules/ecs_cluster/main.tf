@@ -258,12 +258,10 @@ resource "aws_lb" "alb" {
   access_logs {
     bucket  = aws_s3_bucket.alb.bucket
     enabled = true
-    prefix  = "${var.id}-ecs-cluster-alb-access-logs"
   }
   connection_logs {
     bucket  = aws_s3_bucket.alb.bucket
     enabled = true
-    prefix  = "${var.id}-ecs-cluster-alb-connection-logs"
   }
   tags = merge({
     Name = "${var.id}-ecs-cluster-alb",
