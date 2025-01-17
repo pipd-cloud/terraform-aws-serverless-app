@@ -236,12 +236,35 @@ resource "aws_vpc_security_group_egress_rule" "alb_all" {
   }, var.aws_tags)
 }
 
+resource "aws_s3_bucket" "alb" {
+  bucket_prefix = "${var.id}-ecs-cluster-alb-logs-"
+  tags = merge({
+    Name = "${var.id}-ecs-cluster-alb"
+    TFID = var.id
+  }, var.aws_tags)
+}
+
+resource "aws_s3_bucket_policy" "alb" {
+  bucket = aws_s3_bucket.alb.bucket
+  policy = data.aws_iam_policy_document.alb_bucket_policy.json
+}
+
 resource "aws_lb" "alb" {
   name               = "${var.id}-ecs-cluster-alb"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
   subnets            = data.aws_subnet.vpc_public_subnets[*].id
+  access_logs {
+    bucket  = aws_s3_bucket.alb.bucket
+    enabled = true
+    prefix  = "${var.id}-ecs-cluster-alb-access-logs"
+  }
+  connection_logs {
+    bucket  = aws_s3_bucket.alb.bucket
+    enabled = true
+    prefix  = "${var.id}-ecs-cluster-alb-connection-logs"
+  }
   tags = merge({
     Name = "${var.id}-ecs-cluster-alb",
     TFID = var.id

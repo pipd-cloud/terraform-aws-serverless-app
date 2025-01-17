@@ -1,6 +1,7 @@
 # Current Account
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
+
 # IAM
 ## Task execution policies
 data "aws_iam_policy_document" "ecs_trust_policy" {
@@ -45,6 +46,22 @@ data "aws_iam_policy_document" "task_execution_policy" {
       "arn:aws:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/aws/ecr",
       aws_kms_key.cmk_fargate.arn
     ]
+  }
+}
+
+# ECS Cluster ALB
+## Bucket policy
+data "aws_iam_policy_document" "alb_bucket_policy" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:PutObject"
+    ]
+    principals {
+      type        = "Service"
+      identifiers = ["logdelivery.elasticloadbalancing.amazonaws.com"]
+    }
+    resources = ["${aws_s3_bucket.alb.arn}/*"]
   }
 }
 
