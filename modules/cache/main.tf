@@ -102,8 +102,8 @@ resource "aws_elasticache_cluster" "redis" {
   security_group_ids         = [aws_security_group.redis.id]
   engine_version             = var.config.engine_version
   port                       = var.config.port
-  subnet_group_name          = aws_elasticache_subnet_group.redis.name
-  parameter_group_name       = aws_elasticache_parameter_group.redis.name
+  subnet_group_name          = aws_elasticache_subnet_group.redis[0].name
+  parameter_group_name       = aws_elasticache_parameter_group.redis[0].name
   tags = merge({
     Name = "${var.id}-redis-cache"
     TFID = var.id
