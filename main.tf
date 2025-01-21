@@ -54,13 +54,15 @@ module "database" {
 }
 
 module "cache" {
-  depends_on      = [module.ecs_cluster.cluster]
-  source          = "./modules/cache"
-  id              = var.id
-  aws_tags        = var.aws_tags
-  config          = var.cache_config
-  sns_topic       = var.sns_topic
-  security_groups = concat([module.ecs_cluster.cluster_sg.id], var.cache_inbound_sg_ids)
-  vpc_id          = var.vpc_id
-  vpc_subnet_ids  = length(var.vpc_private_subnets) > 3 ? slice(var.vpc_private_subnets, 0, 3) : var.vpc_private_subnets
+  depends_on        = [module.ecs_cluster.cluster]
+  source            = "./modules/cache"
+  id                = var.id
+  aws_tags          = var.aws_tags
+  serverless        = var.cache_serverless
+  serverless_config = var.cache_serverless_config
+  config            = var.cache_config
+  sns_topic         = var.sns_topic
+  security_groups   = concat([module.ecs_cluster.cluster_sg.id], var.cache_inbound_sg_ids)
+  vpc_id            = var.vpc_id
+  vpc_subnet_ids    = length(var.vpc_private_subnets) > 3 ? slice(var.vpc_private_subnets, 0, 3) : var.vpc_private_subnets
 }
