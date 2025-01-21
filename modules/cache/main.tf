@@ -34,6 +34,7 @@ resource "aws_vpc_security_group_egress_rule" "redis_cache_outbound" {
 }
 
 resource "aws_elasticache_serverless_cache" "redis" {
+  count              = var.serverless ? 1 : 0
   engine             = "redis"
   name               = "${var.id}-redis-cache"
   description        = "Redis cache associated with the ${var.id} deployment."
@@ -45,18 +46,66 @@ resource "aws_elasticache_serverless_cache" "redis" {
   }, var.aws_tags)
   cache_usage_limits {
     data_storage {
-      minimum = var.config.data_storage.min
-      maximum = var.config.data_storage.max
+      minimum = var.serverless_config.data_storage.min
+      maximum = var.serverless_config.data_storage.max
       unit    = "GB"
     }
     ecpu_per_second {
-      minimum = var.config.ecpu.min
-      maximum = var.config.ecpu.max
+      minimum = var.serverless_config.ecpu.min
+      maximum = var.serverless_config.ecpu.max
     }
   }
   timeouts {
-    create = var.config.ttl.create
-    update = var.config.ttl.update
-    delete = var.config.ttl.delete
+    create = var.serverless_config.ttl.create
+    update = var.serverless_config.ttl.update
+    delete = var.serverless_config.ttl.delete
   }
+}
+
+resource "aws_elasticache_subnet_group" "redis" {
+  count      = var.serverless_config ? 1 : 0
+  name       = "${var.id}-redis-cache-subnet-group"
+  subnet_ids = data.aws_subnet.vpc_subnets[*].id
+  tags = merge({
+    Name = "${var.id}-redis-cache-subnet-group"
+    TFID = var.id
+  }, var.aws_tags)
+}
+
+resource "aws_elasticache_parameter_group" "redis" {
+  count       = var.serverless_config ? 1 : 0
+  name        = "${var.id}-redis-cache-parameter-group"
+  family      = var.config.paramger_group_family # default.redis7
+  description = "Parameter group for the Redis cache associated with the ${var.id} deployment."
+  dynamic "parameter" {
+    for_each = var.config.parameters
+    content {
+      name  = parameter.value.name
+      value = parameter.value.value
+    }
+  }
+  tags = merge({
+    Name = "${var.id}-redis-cache-parameter-group"
+    TFID = var.id
+  }, var.aws_tags)
+}
+
+resource "aws_elasticache_cluster" "redis" {
+  count                      = var.serverless ? 1 : 0
+  cluster_id                 = "${var.id}-redis-cache"
+  auto_minor_version_upgrade = var.config.auto_minor_version_upgrade
+  engine                     = "redis"
+  node_type                  = var.config.node_type # cache.t3.medium
+  transit_encryption_enabled = var.config.transit_encryption_enabled
+  num_cache_nodes            = var.config.num_cache_nodes # 1
+  apply_immediately          = var.config.apply_immediately
+  security_group_ids         = [aws_security_group.redis.id]
+  engine_version             = var.config.engine_version
+  port                       = var.config.port
+  subnet_group_name          = aws_elasticache_subnet_group.redis.name
+  parameter_group_name       = aws_elasticache_parameter_group.redis.name
+  tags = merge({
+    Name = "${var.id}-redis-cache"
+    TFID = var.id
+  }, var.aws_tags)
 }
