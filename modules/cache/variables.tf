@@ -82,7 +82,7 @@ variable "config" {
     transit_encryption_enabled = optional(bool, false)
     num_cache_nodes            = optional(number, 1)
     apply_immediately          = optional(bool, false)
-    engine_version             = optional(string, "7.1.0")
+    engine_version             = optional(string, "7.1")
     port                       = optional(number, 6379)
     parameter_group_family     = optional(string, "default.redis7")
     parameters = optional(map(object({
