@@ -84,7 +84,7 @@ variable "config" {
     apply_immediately          = optional(bool, false)
     engine_version             = optional(string, "7.1")
     port                       = optional(number, 6379)
-    parameter_group_family     = optional(string, "default.redis7")
+    parameter_group_family     = optional(string, "redis7")
     parameters = optional(map(object({
       name  = string
       value = string
