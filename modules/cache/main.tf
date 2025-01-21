@@ -63,7 +63,7 @@ resource "aws_elasticache_serverless_cache" "redis" {
 }
 
 resource "aws_elasticache_subnet_group" "redis" {
-  count      = var.serverless_config ? 1 : 0
+  count      = var.serverless ? 0 : 1
   name       = "${var.id}-redis-cache-subnet-group"
   subnet_ids = data.aws_subnet.vpc_subnets[*].id
   tags = merge({
@@ -73,7 +73,7 @@ resource "aws_elasticache_subnet_group" "redis" {
 }
 
 resource "aws_elasticache_parameter_group" "redis" {
-  count       = var.serverless_config ? 1 : 0
+  count       = var.serverless ? 0 : 1
   name        = "${var.id}-redis-cache-parameter-group"
   family      = var.config.parameter_group_family # default.redis7
   description = "Parameter group for the Redis cache associated with the ${var.id} deployment."
@@ -91,7 +91,7 @@ resource "aws_elasticache_parameter_group" "redis" {
 }
 
 resource "aws_elasticache_cluster" "redis" {
-  count                      = var.serverless ? 1 : 0
+  count                      = var.serverless ? 0 : 1
   cluster_id                 = "${var.id}-redis-cache"
   auto_minor_version_upgrade = var.config.auto_minor_version_upgrade
   engine                     = "redis"
