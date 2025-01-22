@@ -3,9 +3,19 @@ output "aurora_cluster" {
   value       = module.database.aurora_cluster
 }
 
+output "aurora_cluster_sg" {
+  description = "The RDS Aurora security group."
+  value       = module.database.aurora_cluster_sg
+}
+
 output "redis_cluster" {
   description = "The Elasticache Redis cache."
   value       = module.cache.redis_cluster
+}
+
+output "redis_cluster_sg" {
+  description = "The Elasticache Redis security group."
+  value       = module.cache.redis_cluster_sg
 }
 
 output "ecr_repo" {
