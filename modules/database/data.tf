@@ -89,5 +89,5 @@ data "aws_iam_policy_document" "monitoring_trust_policy" {
 }
 
 data "aws_iam_policy" "monitoring" {
-  name = "RDSEnhancedMonitoringRole"
+  name = "AmazonRDSEnhancedMonitoringRole"
 }
