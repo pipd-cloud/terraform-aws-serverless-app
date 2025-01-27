@@ -76,3 +76,18 @@ data "aws_iam_policy_document" "proxy_policy" {
     }
   }
 }
+
+data "aws_iam_policy_document" "monitoring_trust_policy" {
+  statement {
+    effect = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["monitoring.rds.amazonaws.com"]
+    }
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+data "aws_iam_policy" "monitoring" {
+  name = "RDSEnhancedMonitoringRole"
+}

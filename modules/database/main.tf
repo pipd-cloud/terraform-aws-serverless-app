@@ -115,6 +115,22 @@ resource "aws_db_subnet_group" "cluster_subnet_group" {
 }
 
 # RDS
+## Monitoring
+resource "aws_iam_role" "monitoring" {
+  name_prefix        = "${var.id}-rds-monitoring-role"
+  description        = "Role that allows RDS to publish metrics to CloudWatch."
+  assume_role_policy = data.aws_iam_policy_document.monitoring_trust_policy.json
+  tags = merge({
+    Name = "${var.id}-rds-monitoring-role"
+    TFID = var.id
+  }, var.aws_tags)
+}
+
+resource "aws_iam_role_policy_attachment" "monitoring" {
+  role       = aws_iam_role.monitoring.name
+  policy_arn = data.aws_iam_policy.monitoring.arn
+}
+
 ## Aurora cluster
 resource "random_id" "final_snapshot_id" {
   byte_length = 8
