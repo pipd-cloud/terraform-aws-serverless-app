@@ -104,8 +104,33 @@ resource "aws_elasticache_cluster" "redis" {
   port                       = var.config.port
   subnet_group_name          = aws_elasticache_subnet_group.redis[0].name
   parameter_group_name       = aws_elasticache_parameter_group.redis[0].name
+  maintenance_window         = var.config.maintenance_window
   tags = merge({
     Name = "${var.id}-redis-cache"
     TFID = var.id
   }, var.aws_tags)
+}
+
+resource "aws_cloudwatch_metric_alarm" "redis" {
+  count               = var.serverless ? 0 : 1
+  alarm_name          = "${var.id}-redis-cache-alarm"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  evaluation_periods  = 1
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/ElastiCache"
+  period              = 300
+  statistic           = "Average"
+  threshold           = var.config.alarm_cpu_threshold
+  alarm_description   = "Alarm for the Redis cache associated with the ${var.id} deployment."
+  ok_actions          = [var.sns_topic]
+  alarm_actions       = [var.sns_topic]
+  dimensions = {
+    CacheClusterId = aws_elasticache_cluster.redis[0].id
+    CacheNodeId    = aws_elasticache_cluster.redis[0].cache_nodes[0].id
+  }
+  tags = merge({
+    Name = "${var.id}-redis-cache-alarm"
+    TFID = var.id
+  }, var.aws_tags)
+
 }

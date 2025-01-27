@@ -96,3 +96,57 @@ variable "proxy" {
   type        = bool
   default     = false
 }
+
+variable "iam_auth_enabled" {
+  description = "Whether to enable IAM authentication for the database."
+  type        = bool
+  default     = false
+}
+
+variable "allow_major_version_upgrade" {
+  description = "Whether to allow major version upgrades."
+  type        = bool
+  default     = false
+}
+
+variable "copy_tags_to_snapshot" {
+  description = "Whether to copy tags to the database snapshot."
+  type        = bool
+  default     = true
+}
+
+variable "storage_encrypted" {
+  description = "Whether to encrypt the database storage."
+  type        = bool
+  default     = true
+}
+
+variable "performance_insights_enabled" {
+  description = "Whether to enable performance insights."
+  type        = bool
+  default     = true
+}
+
+variable "performance_insights_retention_period" {
+  description = "The number of days to retain performance insights data."
+  type        = number
+  default     = 7
+}
+
+variable "monitoring_interval" {
+  description = "The interval at which to monitor the database. (Enhanced Monitoring)"
+  type        = number
+  default     = 60
+}
+
+variable "preferred_backup_window" {
+  description = "The preferred backup window for the database."
+  type        = string
+  default     = "00:00-05:00"
+}
+
+variable "preferred_maintenance_window" {
+  description = "The preferred maintenance window for the database."
+  type        = string
+  default     = "sun:05:00-sun:06:00"
+}

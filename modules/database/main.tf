@@ -151,12 +151,17 @@ resource "aws_rds_cluster" "cluster" {
       data.aws_db_snapshot.source[0].db_snapshot_arn : null
     )
   )
-  iam_database_authentication_enabled = true
-  allow_major_version_upgrade         = true
-  storage_encrypted                   = true
-  copy_tags_to_snapshot               = true
-  db_subnet_group_name                = aws_db_subnet_group.cluster_subnet_group.name
-  vpc_security_group_ids              = [aws_security_group.cluster.id]
+  iam_database_authentication_enabled   = var.iam_auth_enabled
+  allow_major_version_upgrade           = var.allow_major_version_upgrade
+  storage_encrypted                     = var.storage_encrypted
+  copy_tags_to_snapshot                 = var.copy_tags_to_snapshot
+  db_subnet_group_name                  = aws_db_subnet_group.cluster_subnet_group.name
+  performance_insights_enabled          = var.performance_insights_enabled
+  performance_insights_retention_period = var.performance_insights_retention_period
+  vpc_security_group_ids                = [aws_security_group.cluster.id]
+  preferred_backup_window               = var.preferred_backup_window
+  preferred_maintenance_window          = var.preferred_maintenance_window
+
   tags = merge({
     Name = "${var.id}-rds-cluster"
     TFID = var.id
@@ -171,14 +176,16 @@ resource "aws_rds_cluster" "cluster" {
   }
 }
 
+
 ## DB instances
 resource "aws_rds_cluster_instance" "instance" {
-  count              = var.instance_count
-  identifier         = "${aws_rds_cluster.cluster.id}-${count.index}"
-  cluster_identifier = aws_rds_cluster.cluster.id
-  instance_class     = "db.serverless"
-  engine             = aws_rds_cluster.cluster.engine
-  engine_version     = aws_rds_cluster.cluster.engine_version
+  count               = var.instance_count
+  identifier          = "${aws_rds_cluster.cluster.id}-${count.index}"
+  cluster_identifier  = aws_rds_cluster.cluster.id
+  instance_class      = "db.serverless"
+  engine              = aws_rds_cluster.cluster.engine
+  engine_version      = aws_rds_cluster.cluster.engine_version
+  monitoring_interval = var.monitoring_interval
   tags = merge({
     Name = "${aws_rds_cluster.cluster.id}-${count.index}"
     TFID = var.id
@@ -274,6 +281,27 @@ resource "aws_cloudwatch_metric_alarm" "db_cluster_cpu" {
   }, var.aws_tags)
 }
 
+resource "aws_cloudwatch_metric_alarm" "db_cluster_acu" {
+  alarm_name          = "${aws_rds_cluster.cluster.cluster_identifier}-acu-alarm"
+  alarm_description   = "High ACU usage on ${aws_rds_cluster.cluster.cluster_identifier} RDS cluster."
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 3
+  metric_name         = "ACUUtilization"
+  namespace           = "AWS/RDS"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 70
+  alarm_actions       = [var.sns_topic]
+  ok_actions          = [var.sns_topic]
+  dimensions = {
+    DBClusterIdentifier = aws_rds_cluster.cluster.id
+  }
+  tags = merge({
+    Name = "${var.id}-rds-cluster-acu"
+    TFID = var.id
+  }, var.aws_tags)
+}
+
 # Metric alarms for the DB instances
 resource "aws_cloudwatch_metric_alarm" "db_cpu" {
   count               = var.instance_count
@@ -293,6 +321,28 @@ resource "aws_cloudwatch_metric_alarm" "db_cpu" {
   }
   tags = merge({
     Name = "${var.id}-rds-cpu-${count.index}"
+    TFID = var.id
+  }, var.aws_tags)
+}
+
+resource "aws_cloudwatch_metric_alarm" "db_acu" {
+  count               = var.instance_count
+  alarm_name          = "${aws_rds_cluster.cluster.cluster_identifier}-${count.index}-acu-alarm"
+  alarm_description   = "High ACU usage on ${aws_rds_cluster.cluster.cluster_identifier}-${count.index} RDS instance."
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 3
+  metric_name         = "ACUUtilization"
+  namespace           = "AWS/RDS"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 70
+  alarm_actions       = [var.sns_topic]
+  ok_actions          = [var.sns_topic]
+  dimensions = {
+    DBInstanceIdentifier = "${aws_rds_cluster.cluster.id}-${count.index}"
+  }
+  tags = merge({
+    Name = "${var.id}-rds-acu-${count.index}"
     TFID = var.id
   }, var.aws_tags)
 }

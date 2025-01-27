@@ -153,6 +153,28 @@ variable "db_instance_snapshot" {
   default     = null
 }
 
+variable "db_engine" {
+  description = "The engine to use for the database."
+  type        = string
+  default     = "postgresql"
+  validation {
+    condition     = contains(["mysql", "postgresql"], var.db_engine)
+    error_message = "The engine must be either 'mysql' or 'postgresql'."
+  }
+}
+
+variable "db_iam_auth_enabled" {
+  description = "Whether to enable IAM authentication for the database."
+  type        = bool
+  default     = false
+}
+
+variable "db_allow_major_version_upgrade" {
+  description = "Whether to allow major version upgrades for the database."
+  type        = bool
+  default     = false
+}
+
 variable "db_engine_version" {
   description = "The version of the engine to deploy."
   type        = string
@@ -187,6 +209,48 @@ variable "db_proxy" {
   default     = false
 }
 
+variable "db_storage_encrypted" {
+  description = "Whether to enable storage encryption for the database."
+  type        = bool
+  default     = true
+}
+
+variable "db_copy_tags_to_snapshot" {
+  description = "Whether to copy tags to the database snapshot."
+  type        = bool
+  default     = true
+}
+
+variable "db_monitoring_interval" {
+  description = "The interval, in seconds, between points when Enhanced Monitoring metrics are collected."
+  type        = number
+  default     = 60
+}
+
+variable "db_performance_insights_enabled" {
+  description = "Whether to enable Performance Insights for the database."
+  type        = bool
+  default     = true
+}
+
+variable "db_performance_insights_retention_period" {
+  description = "The number of days to retain Performance Insights data."
+  type        = number
+  default     = 7
+}
+
+variable "db_preferred_backup_window" {
+  description = "The daily time range during which automated backups are created."
+  type        = string
+  default     = "00:00-05:00"
+}
+
+variable "db_preferred_maintenance_window" {
+  description = "The weekly time range during which system maintenance can occur."
+  type        = string
+  default     = "sun:05:00-sun:06:00"
+}
+
 # Cache
 variable "cache_inbound_sg_ids" {
   description = "The list of security groups that may access the cache."
@@ -211,6 +275,7 @@ variable "cache_config" {
     engine_version             = optional(string, "7.1")
     port                       = optional(number, 6379)
     parameter_group_family     = optional(string, "redis7")
+    maintenance_window         = optional(string, "sun:05:00-sun:06:00")
     parameters = optional(map(object({
       name  = string
       value = string

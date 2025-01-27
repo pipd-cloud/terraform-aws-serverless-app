@@ -85,6 +85,8 @@ variable "config" {
     engine_version             = optional(string, "7.1")
     port                       = optional(number, 6379)
     parameter_group_family     = optional(string, "redis7")
+    alarm_cpu_threshold        = optional(number, 70)
+    maintenance_window         = optional(string, "sun:05:00-sun:06:00")
     parameters = optional(map(object({
       name  = string
       value = string
