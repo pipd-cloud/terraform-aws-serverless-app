@@ -202,6 +202,7 @@ resource "aws_rds_cluster_instance" "instance" {
   engine              = aws_rds_cluster.cluster.engine
   engine_version      = aws_rds_cluster.cluster.engine_version
   monitoring_interval = var.monitoring_interval
+  monitoring_role_arn = aws_iam_role.monitoring.arn
   tags = merge({
     Name = "${aws_rds_cluster.cluster.id}-${count.index}"
     TFID = var.id
