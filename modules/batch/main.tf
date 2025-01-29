@@ -80,3 +80,12 @@ resource "aws_batch_job_queue" "batch" {
     compute_environment = aws_batch_compute_environment.batch.arn
   }
 }
+
+resource "aws_cloudwatch_log_group" "batch" {
+  name = "/${var.id}/batch"
+  tags = merge(
+    {
+      Name = "/${var.id}/batch"
+      TFID = var.id
+  }, var.aws_tags)
+}
