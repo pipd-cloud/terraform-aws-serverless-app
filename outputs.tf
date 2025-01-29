@@ -1,11 +1,26 @@
 output "aurora_cluster" {
-  description = "The RDS Aurora database."
+  description = "The RDS Aurora cluster."
   value       = module.database.aurora_cluster
+}
+
+output "aurora_cluster_instances" {
+  description = "The RDS Aurora database instances."
+  value       = module.database.aurora_cluster_instances
+}
+
+output "aurora_cluster_proxy" {
+  description = "The RDS Aurora cluster proxy."
+  value       = module.database.aurora_cluster_proxy
 }
 
 output "aurora_cluster_sg" {
   description = "The RDS Aurora security group."
   value       = module.database.aurora_cluster_sg
+}
+
+output "aurora_cluster_proxy_sg" {
+  description = "The RDS Aurora security group for the cluster proxy."
+  value       = module.database.aurora_cluster_proxy_sg
 }
 
 output "redis_cluster" {
