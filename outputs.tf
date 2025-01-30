@@ -33,9 +33,9 @@ output "redis_cluster_sg" {
   value       = module.cache.redis_cluster_sg
 }
 
-output "ecr_repo" {
-  description = "The ECR repository for tasks."
-  value       = module.ecr_repo.repo
+output "ecr_repos" {
+  description = "The ECR repositories."
+  value       = module.ecr_repo
 }
 
 output "ecs_cluster" {

@@ -59,33 +59,32 @@ variable "ecs_load_balancer" {
   )
 }
 
-variable "ecr_repo_name" {
-  description = "The name of the ECR repository to create."
-  type        = string
-}
-
-variable "ecr_image_tag_mutability" {
-  description = "The image tag mutability setting for the repository."
-  type        = string
-  default     = "MUTABLE"
-}
-
-variable "ecr_buildcache_tag_prefix" {
-  description = "The prefix for build cache images."
-  type        = string
-  default     = "buildcache-"
-}
-
-variable "ecr_buildcache_expiry_days" {
-  description = "The number of days to keep build cache images."
-  type        = number
-  default     = 7
-}
-
-variable "ecr_task_expiry_days" {
-  description = "The number of days to keep task images."
-  type        = number
-  default     = 90
+variable "ecr_config" {
+  description = "The configuration to use for the ECR repositories."
+  type = list(
+    object(
+      {
+        name                 = string
+        image_tag_mutability = optional(string, "MUTABLE")
+        lifecycle_policy_rules = optional(
+          map(
+            object(
+              {
+                description     = string
+                tag_status      = string
+                tag_prefix_list = optional(list(string), [])
+                count_type      = string
+                count_unit      = optional(string)
+                count_number    = number
+              }
+            )
+          ),
+          {}
+        )
+      }
+    )
+  )
+  default = []
 }
 
 variable "batch" {

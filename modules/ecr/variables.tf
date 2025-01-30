@@ -26,20 +26,15 @@ variable "image_tag_mutability" {
   default     = "MUTABLE"
 }
 
-variable "buildcache_tag_prefix" {
-  description = "The prefix for build cache images."
-  type        = string
-  default     = "buildcache-"
-}
-
-variable "buildcache_expiry_days" {
-  description = "The number of days to keep build cache images."
-  type        = number
-  default     = 7
-}
-
-variable "task_expiry_days" {
-  description = "The number of days to keep task images."
-  type        = number
-  default     = 90
+variable "lifecycle_policy_rules" {
+  description = "The lifecycle policy rules to apply to the ECR repository."
+  type = map(object({
+    description     = string
+    tag_status      = string
+    tag_prefix_list = optional(list(string), [])
+    count_type      = string
+    count_unit      = optional(string)
+    count_number    = number
+  }))
+  default = {}
 }
