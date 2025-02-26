@@ -9,6 +9,11 @@ output "aurora_cluster_instances" {
   value       = aws_rds_cluster_instance.instance
 }
 
+output "aurora_cluster_instances_public" {
+  description = "The RDS Aurora public database instances."
+  value       = aws_rds_cluster_instance.instance_public
+}
+
 output "aurora_cluster_proxy" {
   description = "The RDS Aurora cluster proxy."
   value       = var.proxy ? aws_db_proxy.proxy[0] : null

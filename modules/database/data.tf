@@ -8,8 +8,17 @@ data "aws_vpc" "vpc" {
 }
 
 data "aws_subnet" "vpc_subnets" {
-  count = length(var.vpc_subnet_ids)
-  id    = var.vpc_subnet_ids[count.index]
+  count = length(var.vpc_private_subnet_ids)
+  id    = var.vpc_private_subnet_ids[count.index]
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.vpc.id]
+  }
+}
+
+data "aws_subnet" "vpc_public_subnets" {
+  count = length(var.vpc_public_subnet_ids)
+  id    = var.vpc_public_subnet_ids[count.index]
   filter {
     name   = "vpc-id"
     values = [data.aws_vpc.vpc.id]

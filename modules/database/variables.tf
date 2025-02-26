@@ -18,8 +18,14 @@ variable "vpc_id" {
   type        = string
 }
 
-variable "vpc_subnet_ids" {
-  description = "The IDs of the subnets in the VPC."
+variable "vpc_public_subnet_ids" {
+  description = "The IDs of the public subnets in the VPC."
+  type        = list(string)
+  default     = []
+}
+
+variable "vpc_private_subnet_ids" {
+  description = "The IDs of the private subnets in the VPC."
   type        = list(string)
 }
 
@@ -69,13 +75,23 @@ variable "engine_version" {
   }
 }
 
-variable "instance_count" {
+variable "private_instance_count" {
   description = "The number of instances in the cluster."
   type        = number
-  default     = 2
+  default     = 1
   validation {
-    condition     = var.instance_count > 0
+    condition     = var.private_instance_count > 0
     error_message = "The cluster instance count must be larger than 0."
+  }
+}
+
+variable "public_instance_count" {
+  description = "The number of public instances in the cluster."
+  type        = number
+  default     = 0
+  validation {
+    condition     = var.public_instance_count == 0 || length(var.vpc_public_subnet_ids) != 0
+    error_message = "Must "
   }
 }
 

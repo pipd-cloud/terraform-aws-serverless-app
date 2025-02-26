@@ -189,6 +189,15 @@ variable "db_instance_count" {
     error_message = "The cluster instance count must be larger than 0."
   }
 }
+variable "db_public_instance_count" {
+  description = "The number of public instances in the DB cluster."
+  type        = number
+  default     = 0
+  validation {
+    condition     = var.db_public_instance_count >= 0
+    error_message = "The number of public instances must be equal to, or greater than zero."
+  }
+}
 
 variable "db_acu_config" {
   description = "Minimum and maximum ACU to allocate to instances in the cluster."

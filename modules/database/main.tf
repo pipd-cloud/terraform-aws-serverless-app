@@ -106,7 +106,7 @@ resource "aws_vpc_security_group_egress_rule" "proxy_outbound" {
 ## Subnet group
 resource "aws_db_subnet_group" "cluster_subnet_group" {
   name       = "${var.id}-db-cluster-subnet-group"
-  subnet_ids = data.aws_subnet.vpc_subnets[*].id
+  subnet_ids = var.public_instance_count == 0 ? data.aws_subnet.vpc_subnets[*].id : concat(data.aws_subnet.vpc_public_subnets[*].id, data.aws_subnet.vpc_subnets[*].id)
   tags = merge({
     Name = "${var.id}-db-cluster-subnet-group"
     TFID = var.id
@@ -192,10 +192,9 @@ resource "aws_rds_cluster" "cluster" {
   }
 }
 
-
 ## DB instances
 resource "aws_rds_cluster_instance" "instance" {
-  count               = var.instance_count
+  count               = var.private_instance_count
   identifier          = "${aws_rds_cluster.cluster.id}-${count.index}"
   cluster_identifier  = aws_rds_cluster.cluster.id
   instance_class      = "db.serverless"
@@ -205,6 +204,20 @@ resource "aws_rds_cluster_instance" "instance" {
   monitoring_role_arn = aws_iam_role.monitoring.arn
   tags = merge({
     Name = "${aws_rds_cluster.cluster.id}-${count.index}"
+    TFID = var.id
+  }, var.aws_tags)
+}
+
+resource "aws_rds_cluster_instance" "instance_public" {
+  count               = var.public_instance_count
+  instance_class      = "db.serverless"
+  identifier          = "${aws_rds_cluster.cluster.id}-pub-${count.index}"
+  cluster_identifier  = aws_rds_cluster.cluster.id
+  engine              = aws_rds_cluster.cluster.engine
+  publicly_accessible = true
+  promotion_tier      = 10 # Force this instance to be a reader instance
+  tags = merge({
+    Name = "${aws_rds_cluster.cluster.id}-pub-${count.index}"
     TFID = var.id
   }, var.aws_tags)
 }
@@ -236,7 +249,6 @@ resource "aws_iam_role_policy_attachment" "proxy_policy_attachment" {
   policy_arn = aws_iam_policy.proxy_policy[0].arn
   role       = aws_iam_role.proxy_role[0].name
 }
-
 
 resource "aws_db_proxy" "proxy" {
   count                  = var.proxy ? 1 : 0
@@ -321,9 +333,11 @@ resource "aws_cloudwatch_metric_alarm" "db_cluster_acu" {
 
 # Metric alarms for the DB instances
 resource "aws_cloudwatch_metric_alarm" "db_cpu" {
-  count               = var.instance_count
-  alarm_name          = "${aws_rds_cluster.cluster.cluster_identifier}-${count.index}-cpu-alarm"
-  alarm_description   = "High CPU usage on ${aws_rds_cluster.cluster.cluster_identifier}-${count.index} RDS instance."
+  for_each = {
+    for instance in aws_rds_cluster_instance.instance : instance.id => instance
+  }
+  alarm_name          = "${each.key}-cpu-alarm"
+  alarm_description   = "High CPU usage on ${each.key} RDS instance."
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 3
   metric_name         = "CPUUtilization"
@@ -334,18 +348,20 @@ resource "aws_cloudwatch_metric_alarm" "db_cpu" {
   alarm_actions       = [var.sns_topic]
   ok_actions          = [var.sns_topic]
   dimensions = {
-    DBInstanceIdentifier = "${aws_rds_cluster.cluster.id}-${count.index}"
+    DBInstanceIdentifier = each.key
   }
   tags = merge({
-    Name = "${var.id}-rds-cpu-${count.index}"
+    Name = "${each.key}-cpu-alarm"
     TFID = var.id
   }, var.aws_tags)
 }
 
 resource "aws_cloudwatch_metric_alarm" "db_acu" {
-  count               = var.instance_count
-  alarm_name          = "${aws_rds_cluster.cluster.cluster_identifier}-${count.index}-acu-alarm"
-  alarm_description   = "High ACU usage on ${aws_rds_cluster.cluster.cluster_identifier}-${count.index} RDS instance."
+  for_each = {
+    for instance in aws_rds_cluster_instance.instance : instance.id => instance
+  }
+  alarm_name          = "${each.key}-acu-alarm"
+  alarm_description   = "High ACU usage on ${each.key} RDS instance."
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 3
   metric_name         = "ACUUtilization"
@@ -356,10 +372,58 @@ resource "aws_cloudwatch_metric_alarm" "db_acu" {
   alarm_actions       = [var.sns_topic]
   ok_actions          = [var.sns_topic]
   dimensions = {
-    DBInstanceIdentifier = "${aws_rds_cluster.cluster.id}-${count.index}"
+    DBInstanceIdentifier = each.key
   }
   tags = merge({
-    Name = "${var.id}-rds-acu-${count.index}"
+    Name = "${each.key}-acu-alarm"
+    TFID = var.id
+  }, var.aws_tags)
+}
+
+resource "aws_cloudwatch_metric_alarm" "db_pub_cpu" {
+  for_each = {
+    for instance in aws_rds_cluster_instance.instance_public : instance.id => instance
+  }
+  alarm_name          = "${each.key}-cpu-alarm"
+  alarm_description   = "High CPU usage on ${each.key} RDS instance."
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 3
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/RDS"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 70
+  alarm_actions       = [var.sns_topic]
+  ok_actions          = [var.sns_topic]
+  dimensions = {
+    DBInstanceIdentifier = each.key
+  }
+  tags = merge({
+    Name = "${each.key}-cpu-alarm"
+    TFID = var.id
+  }, var.aws_tags)
+}
+
+resource "aws_cloudwatch_metric_alarm" "db_pub_acu" {
+  for_each = {
+    for instance in aws_rds_cluster_instance.instance_public : instance.id => instance
+  }
+  alarm_name          = "${each.key}-acu-alarm"
+  alarm_description   = "High ACU usage on ${each.key} RDS instance."
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 3
+  metric_name         = "ACUUtilization"
+  namespace           = "AWS/RDS"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 70
+  alarm_actions       = [var.sns_topic]
+  ok_actions          = [var.sns_topic]
+  dimensions = {
+    DBInstanceIdentifier = each.key
+  }
+  tags = merge({
+    Name = "${each.key}-acu-alarm"
     TFID = var.id
   }, var.aws_tags)
 }

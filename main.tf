@@ -49,7 +49,8 @@ module "database" {
   iam_auth_enabled                      = var.db_iam_auth_enabled
   instance_snapshot                     = var.db_instance_snapshot
   cluster_snapshot                      = var.db_cluster_snapshot
-  instance_count                        = var.db_instance_count
+  public_instance_count                 = var.db_public_instance_count
+  private_instance_count                = var.db_instance_count
   monitoring_interval                   = var.db_monitoring_interval
   performance_insights_enabled          = var.db_performance_insights_enabled
   performance_insights_retention_period = var.db_performance_insights_retention_period
@@ -59,7 +60,8 @@ module "database" {
   security_groups                       = concat([module.ecs_cluster.cluster_sg.id], var.db_inbound_sg_ids)
   sns_topic                             = var.sns_topic
   vpc_id                                = var.vpc_id
-  vpc_subnet_ids                        = var.vpc_private_subnets
+  vpc_public_subnet_ids                 = var.vpc_public_subnets
+  vpc_private_subnet_ids                = var.vpc_private_subnets
 }
 
 module "cache" {
