@@ -106,7 +106,6 @@ resource "aws_elasticache_cluster" "redis" {
   subnet_group_name          = aws_elasticache_subnet_group.redis[0].name
   parameter_group_name       = aws_elasticache_parameter_group.redis[0].name
   maintenance_window         = var.config.maintenance_window
-  snapshot_window            = var.config.maintenance_window
   snapshot_retention_limit   = var.config.snapshot_retention_limit
   tags = merge({
     Name = "${var.id}-redis-cache"
