@@ -284,6 +284,7 @@ variable "cache_config" {
     port                       = optional(number, 6379)
     parameter_group_family     = optional(string, "redis7")
     maintenance_window         = optional(string, "sun:05:00-sun:06:00")
+    snapshot_retention_limit   = optional(number, 5)
     parameters = optional(map(object({
       name  = string
       value = string
@@ -296,6 +297,7 @@ variable "cache_config" {
 variable "cache_serverless_config" {
   description = "The configuration for the cache."
   type = object({
+    snapshot_retention_limit = optional(number, 5)
     data_storage = object({
       min = number
       max = number
@@ -311,6 +313,7 @@ variable "cache_serverless_config" {
     })
   })
   default = {
+    snaphot_retention_limit = 5
     data_storage = {
       min = 1
       max = 2

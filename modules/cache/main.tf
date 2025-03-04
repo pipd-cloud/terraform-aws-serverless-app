@@ -34,12 +34,13 @@ resource "aws_vpc_security_group_egress_rule" "redis_cache_outbound" {
 }
 
 resource "aws_elasticache_serverless_cache" "redis" {
-  count              = var.serverless ? 1 : 0
-  engine             = "redis"
-  name               = "${var.id}-redis-cache"
-  description        = "Redis cache associated with the ${var.id} deployment."
-  subnet_ids         = data.aws_subnet.vpc_subnets[*].id
-  security_group_ids = [aws_security_group.redis.id]
+  count                    = var.serverless ? 1 : 0
+  engine                   = "redis"
+  name                     = "${var.id}-redis-cache"
+  description              = "Redis cache associated with the ${var.id} deployment."
+  subnet_ids               = data.aws_subnet.vpc_subnets[*].id
+  security_group_ids       = [aws_security_group.redis.id]
+  snapshot_retention_limit = var.serverless_config.snapshot_retention_limit
   tags = merge({
     Name = "${var.id}-redis-cache"
     TFID = var.id
@@ -105,6 +106,8 @@ resource "aws_elasticache_cluster" "redis" {
   subnet_group_name          = aws_elasticache_subnet_group.redis[0].name
   parameter_group_name       = aws_elasticache_parameter_group.redis[0].name
   maintenance_window         = var.config.maintenance_window
+  snapshot_window            = var.config.maintenance_window
+  snapshot_retention_limit   = var.config.snapshot_retention_limit
   tags = merge({
     Name = "${var.id}-redis-cache"
     TFID = var.id

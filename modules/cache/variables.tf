@@ -37,6 +37,7 @@ variable "security_groups" {
 variable "serverless_config" {
   description = "The configuration for the cache."
   type = object({
+    snapshot_retention_limit = optional(number, 5)
     data_storage = object({
       min = number
       max = number
@@ -87,6 +88,7 @@ variable "config" {
     parameter_group_family     = optional(string, "redis7")
     alarm_cpu_threshold        = optional(number, 70)
     maintenance_window         = optional(string, "sun:05:00-sun:06:00")
+    snapshot_retention_limit   = optional(number, 5)
     parameters = optional(map(object({
       name  = string
       value = string
