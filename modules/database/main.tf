@@ -333,11 +333,9 @@ resource "aws_cloudwatch_metric_alarm" "db_cluster_acu" {
 
 # Metric alarms for the DB instances
 resource "aws_cloudwatch_metric_alarm" "db_cpu" {
-  for_each = {
-    for instance in aws_rds_cluster_instance.instance : instance.id => instance
-  }
-  alarm_name          = "${each.key}-cpu-alarm"
-  alarm_description   = "High CPU usage on ${each.key} RDS instance."
+  count               = var.private_instance_count
+  alarm_name          = "${aws_rds_cluster_instance.instance[count.index].id}-cpu-alarm"
+  alarm_description   = "High CPU usage on ${aws_rds_cluster_instance.instance[count.index].id} RDS instance."
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 3
   metric_name         = "CPUUtilization"
@@ -348,20 +346,18 @@ resource "aws_cloudwatch_metric_alarm" "db_cpu" {
   alarm_actions       = [var.sns_topic]
   ok_actions          = [var.sns_topic]
   dimensions = {
-    DBInstanceIdentifier = each.key
+    DBInstanceIdentifier = aws_rds_cluster_instance.instance[count.index].id
   }
   tags = merge({
-    Name = "${each.key}-cpu-alarm"
+    Name = "${aws_rds_cluster_instance.instance[count.index].id}-cpu-alarm"
     TFID = var.id
   }, var.aws_tags)
 }
 
 resource "aws_cloudwatch_metric_alarm" "db_acu" {
-  for_each = {
-    for instance in aws_rds_cluster_instance.instance : instance.id => instance
-  }
-  alarm_name          = "${each.key}-acu-alarm"
-  alarm_description   = "High ACU usage on ${each.key} RDS instance."
+  count               = var.private_instance_count
+  alarm_name          = "${aws_rds_cluster_instance.instance[count.index].id}-acu-alarm"
+  alarm_description   = "High ACU usage on ${aws_rds_cluster_instance.instance[count.index].id} RDS instance."
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 3
   metric_name         = "ACUUtilization"
@@ -372,20 +368,18 @@ resource "aws_cloudwatch_metric_alarm" "db_acu" {
   alarm_actions       = [var.sns_topic]
   ok_actions          = [var.sns_topic]
   dimensions = {
-    DBInstanceIdentifier = each.key
+    DBInstanceIdentifier = aws_rds_cluster_instance.instance[count.index].id
   }
   tags = merge({
-    Name = "${each.key}-acu-alarm"
+    Name = "${aws_rds_cluster_instance.instance[count.index].id}-acu-alarm"
     TFID = var.id
   }, var.aws_tags)
 }
 
 resource "aws_cloudwatch_metric_alarm" "db_pub_cpu" {
-  for_each = {
-    for instance in aws_rds_cluster_instance.instance_public : instance.id => instance
-  }
-  alarm_name          = "${each.key}-cpu-alarm"
-  alarm_description   = "High CPU usage on ${each.key} RDS instance."
+  count               = var.public_instance_count
+  alarm_name          = "${aws_rds_cluster_instance.instance_public[count.index].id}-cpu-alarm"
+  alarm_description   = "High CPU usage on ${aws_rds_cluster_instance.instance_public[count.index].id} RDS instance."
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 3
   metric_name         = "CPUUtilization"
@@ -396,20 +390,18 @@ resource "aws_cloudwatch_metric_alarm" "db_pub_cpu" {
   alarm_actions       = [var.sns_topic]
   ok_actions          = [var.sns_topic]
   dimensions = {
-    DBInstanceIdentifier = each.key
+    DBInstanceIdentifier = aws_rds_cluster_instance.instance_public[count.index].id
   }
   tags = merge({
-    Name = "${each.key}-cpu-alarm"
+    Name = "${aws_rds_cluster_instance.instance_public[count.index].id}-cpu-alarm"
     TFID = var.id
   }, var.aws_tags)
 }
 
 resource "aws_cloudwatch_metric_alarm" "db_pub_acu" {
-  for_each = {
-    for instance in aws_rds_cluster_instance.instance_public : instance.id => instance
-  }
-  alarm_name          = "${each.key}-acu-alarm"
-  alarm_description   = "High ACU usage on ${each.key} RDS instance."
+  count               = var.public_instance_count
+  alarm_name          = "${aws_rds_cluster_instance.instance_public[count.index].id}-acu-alarm"
+  alarm_description   = "High ACU usage on ${aws_rds_cluster_instance.instance_public[count.index].id} RDS instance."
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = 3
   metric_name         = "ACUUtilization"
@@ -420,10 +412,10 @@ resource "aws_cloudwatch_metric_alarm" "db_pub_acu" {
   alarm_actions       = [var.sns_topic]
   ok_actions          = [var.sns_topic]
   dimensions = {
-    DBInstanceIdentifier = each.key
+    DBInstanceIdentifier = aws_rds_cluster_instance.instance_public[count.index].id
   }
   tags = merge({
-    Name = "${each.key}-acu-alarm"
+    Name = "${aws_rds_cluster_instance.instance_public[count.index].id}-acu-alarm"
     TFID = var.id
   }, var.aws_tags)
 }
