@@ -55,7 +55,7 @@ variable "load_balancer" {
   )
   default = {}
   validation {
-    condition     = var.load_balancer.acm_certificate_arn != null && var.load_balancer.acm_certificate_arn != null
+    condition     = var.load_balancer.domain != null && var.load_balancer.acm_certificate_arn != null
     error_message = "Cannot specify both the domain and the certificate ARN."
   }
 }
