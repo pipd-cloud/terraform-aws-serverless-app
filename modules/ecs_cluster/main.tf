@@ -92,7 +92,7 @@ resource "aws_iam_role_policy_attachment" "task_execution_managed_policies" {
   policy_arn = each.value.arn
 }
 
-resource "aws_iam_role_policy_attachment" "task_exeuctor_policy" {
+resource "aws_iam_role_policy_attachment" "task_executor_policy" {
   role       = aws_iam_role.task_execution_role.name
   policy_arn = aws_iam_policy.task_execution_policy.arn
 }
@@ -242,10 +242,38 @@ resource "aws_lb" "alb" {
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
   subnets            = data.aws_subnet.vpc_public_subnets[*].id
+  dynamic "access_logs" {
+    for_each = var.load_balancer.logs_bucket != null ? [0] : []
+    content {
+      bucket  = data.aws_s3_bucket.access_logs[0].bucket
+      enabled = true
+    }
+  }
   tags = merge({
     Name = "${var.id}-ecs-cluster-alb",
     TFID = var.id
   }, var.aws_tags)
+}
+
+
+resource "aws_lb_listener" "https_arn" {
+  count             = var.load_balancer.acm_certificate_arn != null ? 1 : 0
+  load_balancer_arn = aws_lb.alb.arn
+  certificate_arn   = var.load_balancer.acm_certificate_arn
+  port              = 443
+  protocol          = "HTTPS"
+  tags = merge({
+    Name = "${var.id}-ecs-cluster-alb-https",
+    TFID = var.id
+  }, var.aws_tags)
+  default_action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Not Found"
+      status_code  = 404
+    }
+  }
 }
 
 resource "aws_lb_listener" "https" {
@@ -269,7 +297,7 @@ resource "aws_lb_listener" "https" {
 }
 
 resource "aws_lb_listener" "http" {
-  count             = var.load_balancer.domain != null ? 1 : 0
+  count             = var.load_balancer.acm_certificate_arn != null || var.load_balancer.domain != null ? 1 : 0
   load_balancer_arn = aws_lb.alb.arn
   port              = 80
   protocol          = "HTTP"
@@ -288,7 +316,7 @@ resource "aws_lb_listener" "http" {
 }
 
 resource "aws_lb_listener" "http_fwd" {
-  count             = var.load_balancer.domain != null ? 0 : 1
+  count             = var.load_balancer.acm_certificate_arn != null || var.load_balancer.domain != null ? 0 : 1
   load_balancer_arn = aws_lb.alb.arn
   port              = 80
   protocol          = "HTTP"

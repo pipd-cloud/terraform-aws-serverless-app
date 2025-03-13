@@ -50,11 +50,12 @@ variable "ecs_load_balancer" {
   description = "The configuration to use for the Load Balancer."
   type = object(
     {
-      domain          = optional(string)
-      public          = optional(bool, true)
-      security_groups = optional(list(string), [])
-      prefix_lists    = optional(list(string), [])
-      waf             = optional(bool, false)
+      domain              = optional(string)
+      acm_certificate_arn = optional(string)
+      public              = optional(bool, true)
+      security_groups     = optional(list(string), [])
+      prefix_lists        = optional(list(string), [])
+      logs_bucket         = optional(string)
     }
   )
 }
