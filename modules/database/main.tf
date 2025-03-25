@@ -186,7 +186,7 @@ resource "aws_rds_cluster" "cluster" {
   preferred_backup_window               = var.preferred_backup_window
   preferred_maintenance_window          = var.preferred_maintenance_window
   deletion_protection                   = var.deletion_protection
-  enabled_cloudwatch_logs_exports       = concat(var.cloudwatch_log_group_exports)
+  enabled_cloudwatch_logs_exports       = distinct(concat(var.cloudwatch_log_group_exports, var.engine == "postgresql" ? ["postgresql"] : []))
 
   tags = merge({
     Name = "${var.id}-rds-cluster"
