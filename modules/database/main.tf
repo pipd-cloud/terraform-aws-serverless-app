@@ -146,6 +146,14 @@ resource "aws_db_parameter_group" "instance" {
   family = "aurora-${var.engine}${var.engine_version}"
 }
 
+
+resource "aws_rds_global_cluster" "cluster" {
+  count                        = var.global_cluster ? 1 : 0
+  global_cluster_identifier    = "${var.id}-global-rds-cluster"
+  force_destroy                = true
+  source_db_cluster_identifier = aws_rds_cluster.cluster.arn
+}
+
 resource "aws_rds_cluster" "cluster" {
   cluster_identifier               = "${var.id}-rds-cluster"
   engine                           = "aurora-${var.engine}"
@@ -177,6 +185,8 @@ resource "aws_rds_cluster" "cluster" {
   vpc_security_group_ids                = [aws_security_group.cluster.id]
   preferred_backup_window               = var.preferred_backup_window
   preferred_maintenance_window          = var.preferred_maintenance_window
+  deletion_protection                   = var.deletion_protection
+  enabled_cloudwatch_logs_exports       = concat(var.cloudwatch_log_group_exports)
 
   tags = merge({
     Name = "${var.id}-rds-cluster"
@@ -188,7 +198,7 @@ resource "aws_rds_cluster" "cluster" {
   }
   lifecycle {
     create_before_destroy = true
-    ignore_changes        = [snapshot_identifier, master_username]
+    ignore_changes        = [snapshot_identifier, master_username, global_cluster_identifier]
   }
 }
 

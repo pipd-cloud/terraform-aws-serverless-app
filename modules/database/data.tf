@@ -47,9 +47,6 @@ data "aws_db_snapshot" "source" {
   db_snapshot_identifier = var.instance_snapshot
 }
 
-locals {
-}
-
 ## RDS Proxy
 data "aws_iam_policy_document" "proxy_role_trust_policy" {
   count = var.proxy ? 1 : 0

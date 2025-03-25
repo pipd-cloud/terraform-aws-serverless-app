@@ -24,6 +24,10 @@ output "aurora_cluster_sg" {
   value       = aws_security_group.cluster
 }
 
+output "aurora_global_cluster" {
+  value = var.global_cluster ? aws_rds_global_cluster.cluster[0] : null
+}
+
 output "aurora_cluster_proxy_sg" {
   description = "The RDS security group for the cluster proxy."
   value       = var.proxy ? aws_security_group.proxy[0] : null

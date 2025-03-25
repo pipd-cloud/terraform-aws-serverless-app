@@ -260,6 +260,23 @@ variable "db_preferred_maintenance_window" {
   default     = "sun:05:00-sun:06:00"
 }
 
+variable "db_deletion_protection" {
+  description = "Set to true to enable delete protection for the DB cluster."
+  type        = bool
+  default     = true
+}
+
+variable "db_global_cluster" {
+  description = "Set to true to create an RDS global cluster."
+  type        = bool
+  default     = false
+}
+
+variable "db_cloudwatch_log_group_exports" {
+  description = "The list of logs to export to CloudWatch, e.g. ['postgresql']"
+  type        = list(string)
+  default     = []
+}
 # Cache
 variable "cache_inbound_sg_ids" {
   description = "The list of security groups that may access the cache."

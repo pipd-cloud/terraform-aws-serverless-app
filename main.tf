@@ -48,7 +48,10 @@ module "database" {
   engine_version                        = var.db_engine_version
   iam_auth_enabled                      = var.db_iam_auth_enabled
   instance_snapshot                     = var.db_instance_snapshot
+  cloudwatch_log_group_exports          = var.db_cloudwatch_log_group_exports
   cluster_snapshot                      = var.db_cluster_snapshot
+  deletion_protection                   = var.db_deletion_protection
+  global_cluster                        = var.db_global_cluster
   public_instance_count                 = var.db_public_instance_count
   private_instance_count                = var.db_instance_count
   monitoring_interval                   = var.db_monitoring_interval

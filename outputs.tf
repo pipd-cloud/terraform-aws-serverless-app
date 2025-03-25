@@ -23,6 +23,10 @@ output "aurora_cluster_proxy_sg" {
   value       = module.database.aurora_cluster_proxy_sg
 }
 
+output "aurora_global_cluster" {
+  value = module.database.aurora_global_cluster
+}
+
 output "redis_cluster" {
   description = "The Elasticache Redis cache."
   value       = module.cache.redis_cluster
