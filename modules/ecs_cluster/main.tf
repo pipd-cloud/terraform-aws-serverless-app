@@ -333,3 +333,26 @@ resource "aws_lb_listener" "http_fwd" {
     }
   }
 }
+
+resource "aws_cloudwatch_metric_alarm" "alb_rejected_connections" {
+  alarm_name          = "${var.id}-ecs-cluster-alb-rejected-connections-alarm"
+  alarm_description   = "Maxed out connections on ECS cluster ALB ${aws_lb.alb.id}"
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  threshold           = 1
+  statistic           = "Sum"
+  evaluation_periods  = 3
+  period              = 60
+  actions_enabled     = true
+  ok_actions          = [var.sns_topic]
+  alarm_actions       = [var.sns_topic]
+  metric_name         = "RejectedConnectionCount"
+  namespace           = "AWS/ApplicationELB"
+  dimensions = {
+    LoadBalancer = aws_lb.alb.arn_suffix
+  }
+  tags = merge(
+    {
+      Name = "${var.id}-ecs-cluster-alb-rejected-connections-alarm"
+    }, var.aws_tags
+  )
+}
