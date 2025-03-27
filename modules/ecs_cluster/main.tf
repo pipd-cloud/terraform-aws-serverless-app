@@ -342,6 +342,7 @@ resource "aws_cloudwatch_metric_alarm" "alb_rejected_connections" {
   statistic           = "Sum"
   evaluation_periods  = 3
   period              = 60
+  treat_missing_data  = "notBreaching"
   actions_enabled     = true
   ok_actions          = [var.sns_topic]
   alarm_actions       = [var.sns_topic]
